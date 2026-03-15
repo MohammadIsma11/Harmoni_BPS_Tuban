@@ -21,7 +21,7 @@ Fitur utama:
 * Manajemen dinas luar
 * Export data ke Excel
 * Export laporan ke PDF
-* Sistem login multi role (Admin, Katim, Pegawai)
+* Sistem login multi role (Admin, Kepala, Katim, Pegawai)
 
 ---
 
