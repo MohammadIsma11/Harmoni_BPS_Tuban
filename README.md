@@ -107,7 +107,7 @@ DB_PASSWORD=(password postgres mu)
 Buat database baru di MySQL dengan nama:
 
 ```
-harmoni_bps
+harmoni
 ```
 
 ---
