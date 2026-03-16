@@ -104,6 +104,7 @@ class DatabaseSeeder extends Seeder
             ['nama_lengkap' => 'Admin Utama', 'nip' => '197006221992031042', 'username' => 'admin', 'role' => 'Admin', 'team_id' => null],
 
             ['nama_lengkap' => "Zaidatul Ma'rifah", 'nip' => '197211051994122001', 'username' => 'zaidatul.marifah', 'role' => 'Pegawai', 'team_id' => 1],
+            ['nama_lengkap' => "Luky Kurnianto", 'nip' => '197211051994122001', 'username' => 'luky.kurnianto', 'role' => 'Pegawai', 'team_id' => 7],
         ];
 
         foreach ($users as $userData) {

@@ -21,14 +21,33 @@ class ProfileController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // 1. Tentukan Role yang diizinkan (Validation Logic)
-        $allowedRoles = [$user->role];
+        // --- 1. IDENTIFIKASI PEJABAT ASLI ---
+        // Kita cek NIP atau Username Pejabat asli dari daftar Seeder.
+        // Ini daftar username yang di Seeder kamu adalah Katim/Kepala.
+        $daftarPejabat = [
+            'kepala.bps', 'ketua.tim', 'dodik.hendarto', 'respati.yekti', 
+            'umdatul.ummah', 'ika.rahmawati', 'arif.suroso', 'triana.puji', 
+            'yudhi.prasetyono', 'wicaksono'
+        ];
 
-        if ($user->role === 'Kepala') {
-            $allowedRoles = ['Kepala', 'Pegawai'];
-        } elseif ($user->role === 'Katim') {
-            $allowedRoles = ['Katim', 'Pegawai'];
-        } elseif ($user->role === 'Admin') {
+        // Cek apakah user yang login ini termasuk dalam daftar pejabat asli
+        $isPejabatAsli = in_array($user->username, $daftarPejabat);
+
+        // --- 2. LOGIKA ROLE YANG DIIZINKAN ---
+        $allowedRoles = ['Pegawai'];
+
+        // HANYA jika dia Pejabat Asli DAN menyalakan Akses Super (atau sedang menjabat), 
+        // baru boleh ganti role.
+        if ($isPejabatAsli && ($request->has_super_access == 1 || $user->role !== 'Pegawai')) {
+            if ($user->team_id == 8) {
+                $allowedRoles = ['Kepala', 'Pegawai'];
+            } else {
+                $allowedRoles = ['Katim', 'Pegawai'];
+            }
+        } 
+        
+        // Admin selalu Admin
+        if ($user->role === 'Admin') {
             $allowedRoles = ['Admin'];
         }
 
@@ -37,22 +56,28 @@ class ProfileController extends Controller
             'username'         => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
             'role'             => ['required', Rule::in($allowedRoles)],
             'password'         => 'nullable|min:8|confirmed',
-            'has_super_access' => 'nullable|boolean', 
         ]);
 
-        // 2. Update Data Dasar
+        // --- 3. UPDATE DATA DASAR ---
         $user->nama_lengkap = $request->nama_lengkap;
         $user->username = $request->username;
-        
-        // 3. Update Akses Super (Bisa diatur sendiri oleh user)
-        $user->has_super_access = $request->has_super_access;
 
-        // 4. Update Role hanya jika user bukan Admin
+        // --- 4. LOGIKA AKSES SUPER (ANTI-NULL & TIKET BALIK) ---
+        $hasSuper = $request->input('has_super_access', 0);
+
+        // Jika dia Pejabat dan memilih balik jadi Kepala/Katim, PAKSA Akses Super aktif (1)
+        if ($request->role === 'Kepala' || $request->role === 'Katim') {
+            $hasSuper = 1;
+        }
+
+        // Simpan sebagai integer agar Postgres tidak error
+        $user->has_super_access = (int) $hasSuper;
+
+        // --- 5. UPDATE ROLE & PASSWORD ---
         if ($user->role !== 'Admin') {
             $user->role = $request->role;
         }
 
-        // 5. Update Password jika diisi
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
