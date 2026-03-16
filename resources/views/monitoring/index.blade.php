@@ -1,12 +1,9 @@
 @php
     \Carbon\Carbon::setLocale('id');
-    // Mode Default adalah 'month' jika tidak ada di request
     $viewMode = request('view_mode', 'month');
     $startDate = \Carbon\Carbon::create($year, $month, 1);
     
     if($viewMode == 'week') {
-        // Ambil hari Senin dari minggu saat ini (atau minggu yang dipilih)
-        // Kita gunakan hari ke-1 sebagai patokan awal minggu jika dalam konteks bulan tersebut
         $startDate = \Carbon\Carbon::parse(request('week_start', now()->startOfWeek()->format('Y-m-d')));
         $daysToShow = 7;
     } else {
@@ -46,8 +43,10 @@
     }
     .agenda-pill:hover { transform: scale(1.1); z-index: 10; box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
 
+    /* WARNA KATEGORI */
     .pill-tugas { background: linear-gradient(135deg, #0058a8, #007bff); }
     .pill-rapat { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .pill-dinas { background: linear-gradient(135deg, #8b5cf6, #6d28d9); } /* UNGU UNTUK DINAS LUAR */
     .pill-selesai { background: linear-gradient(135deg, #10b981, #059669) !important; }
 
     .view-filter-btn { border-radius: 10px; font-weight: 700; font-size: 0.75rem; padding: 8px 16px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; }
@@ -58,21 +57,19 @@
     <div class="card monitoring-card shadow-sm mb-4">
         <div class="card-body p-4">
             
-            {{-- Header Timeline --}}
             <div class="row align-items-center mb-4">
-                <div class="col-xl-4 col-lg-12 mb-3 mb-xl-0">
+                <div class="col-xl-3 col-lg-12 mb-3 mb-xl-0">
                     <div class="d-flex align-items-center mb-1">
                         <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
                             <i class="fas fa-calendar-alt fa-lg"></i>
                         </div>
                         <h4 class="fw-bold mb-0 text-dark">Timeline Monitoring</h4>
                     </div>
-                    <p class="text-muted small mb-0">Visualisasi beban kerja personil BPS Tuban.</p>
+                    <p class="text-muted small mb-0">Visualisasi beban kerja personil.</p>
                 </div>
                 
-                <div class="col-xl-8 col-lg-12">
+                <div class="col-xl-9 col-lg-12">
                     <div class="d-flex flex-wrap justify-content-xl-end gap-3 align-items-center">
-                        {{-- Toggle Mode Mingguan / Bulanan --}}
                         <div class="btn-group shadow-sm p-1 bg-light rounded-3">
                             <a href="{{ route('monitoring.index', ['view_mode' => 'week', 'month' => $month, 'year' => $year]) }}" 
                                class="btn view-filter-btn {{ $viewMode == 'week' ? 'active' : '' }}">Mingguan</a>
@@ -80,14 +77,14 @@
                                class="btn view-filter-btn {{ $viewMode == 'month' ? 'active' : '' }}">Bulanan</a>
                         </div>
 
-                        {{-- Legend Warna --}}
+                        {{-- Legend Warna - TAMBAH DINAS LUAR --}}
                         <div class="d-flex gap-3 px-3 border-end border-start d-none d-sm-flex">
                             <div class="legend-item"><div class="legend-color pill-tugas" style="width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;"></div> <small>Tugas</small></div>
                             <div class="legend-item"><div class="legend-color pill-rapat" style="width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;"></div> <small>Rapat</small></div>
+                            <div class="legend-item"><div class="legend-color pill-dinas" style="width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;"></div> <small>Dinas Luar</small></div>
                             <div class="legend-item"><div class="legend-color pill-selesai" style="width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;"></div> <small>Selesai</small></div>
                         </div>
 
-                        {{-- Form Filter --}}
                         <form action="{{ route('monitoring.index') }}" method="GET" class="d-flex gap-2">
                             <input type="hidden" name="view_mode" value="{{ $viewMode }}">
                             <div class="input-group input-group-sm shadow-sm">
@@ -110,7 +107,6 @@
                 </div>
             </div>
 
-            {{-- Table Grid --}}
             <div class="table-responsive scrollbar-custom border shadow-sm rounded-4">
                 <table class="table table-bordered mb-0">
                     <thead>
@@ -158,9 +154,24 @@
                                 <td class="day-cell {{ $isWeekend ? 'weekend-cell' : '' }} {{ $isToday ? 'today-cell' : '' }}">
                                     @if($agenda)
                                         @php
-                                            $pillClass = $agenda->status_laporan == 'Selesai' ? 'pill-selesai' : ($agenda->activity_type_id == 2 ? 'pill-rapat' : 'pill-tugas');
-                                            $icon = $agenda->status_laporan == 'Selesai' ? 'fa-check' : ($agenda->activity_type_id == 2 ? 'fa-users' : 'fa-briefcase');
-                                            $labelTipe = $agenda->activity_type_id == 2 ? "Rapat" : "Tugas";
+                                            // LOGIKA WARNA & ICON BARU
+                                            if($agenda->status_laporan == 'Selesai') {
+                                                $pillClass = 'pill-selesai';
+                                                $icon = 'fa-check';
+                                            } elseif($agenda->activity_type_id == 2) {
+                                                $pillClass = 'pill-rapat';
+                                                $icon = 'fa-users';
+                                            } elseif($agenda->activity_type_id == 3) {
+                                                $pillClass = 'pill-dinas'; // Kategori baru
+                                                $icon = 'fa-plane-departure';
+                                            } else {
+                                                $pillClass = 'pill-tugas';
+                                                $icon = 'fa-briefcase';
+                                            }
+
+                                            // Label Detail
+                                            $tipeMap = [1 => 'Tugas', 2 => 'Rapat', 3 => 'Dinas Luar'];
+                                            $labelTipe = $tipeMap[$agenda->activity_type_id] ?? 'Kegiatan';
                                             $namaTim = $agenda->creator && $agenda->creator->team ? $agenda->creator->team->nama_tim : "Umum";
                                             $asalPenugasan = $labelTipe . " dari " . $namaTim;
                                         @endphp
@@ -180,6 +191,7 @@
     </div>
 </div>
 
+{{-- Script tetap sama --}}
 <script>
     function showDetail(title, lokasi, pegawai, status, jenis) {
         Swal.fire({
