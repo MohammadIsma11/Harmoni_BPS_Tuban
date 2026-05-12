@@ -16,7 +16,12 @@
     <link rel="stylesheet" href="<?php echo e(asset('css/layouts/app-layout.css')); ?>">
     
     
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
 <body>
@@ -145,15 +150,12 @@
 
             
             <?php if($role == 'Admin' || $role == 'Kepala'): ?>
-                <div class="menu-divider">Pengaturan & Master</div>
+                <div class="menu-divider">Administrasi & Master</div>
                 <a href="<?php echo e(route('manajemen.anggota')); ?>" class="nav-link">
                     <i class="fas fa-users-cog me-2"></i> <span>Manajemen User</span>
                 </a>
                 <a href="<?php echo e(route('manajemen.mitra.index')); ?>" class="nav-link">
                     <i class="fas fa-id-card me-2"></i> <span>Master Mitra</span>
-                </a>
-                <a href="<?php echo e(route('manajemen.kegiatan.index')); ?>" class="nav-link">
-                    <i class="fas fa-tasks me-2"></i> <span>Master Kegiatan</span>
                 </a>
             <?php endif; ?>
 
@@ -172,6 +174,19 @@
                 <div class="menu-divider">Pelaksanaan</div>
                 
                 
+                <?php
+                    $countLapangan = \App\Models\Agenda::where('assigned_to', Auth::id())
+                        ->where('activity_type_id', 1)
+                        ->where('status_laporan', 'Pending')
+                        ->where(function($query) {
+                            $query->where('mode_surat', 'upload')
+                                  ->orWhere(function($q) {
+                                      $q->where('mode_surat', 'generate')
+                                        ->where('status_approval', 'Approved');
+                                  });
+                        })
+                        ->count();
+                ?>
                 <button class="nav-link collapsed" 
                         data-bs-toggle="collapse" data-bs-target="#menuLapangan">
                     <i class="fas fa-briefcase me-2"></i> 
@@ -184,6 +199,9 @@
                             <a href="<?php echo e(route('task.index')); ?>" class="nav-link small">
                                 <i class="fas fa-tasks me-2"></i> 
                                 <span>Daftar Tugas</span>
+                                <?php if($countLapangan > 0): ?>
+                                    <span class="badge bg-danger rounded-pill badge-notif ms-auto"><?php echo e($countLapangan); ?></span>
+                                <?php endif; ?>
                             </a>
                         </li>
                         <li>
@@ -195,6 +213,12 @@
                 </div>
 
                 
+                <?php
+                    $countDinas = \App\Models\Agenda::where('assigned_to', Auth::id())
+                        ->whereIn('activity_type_id', [2, 3])
+                        ->where('status_laporan', 'Pending')
+                        ->count();
+                ?>
                 <button class="nav-link collapsed" 
                         data-bs-toggle="collapse" data-bs-target="#menuRapat">
                     <i class="fas fa-handshake me-2"></i> 
@@ -207,6 +231,9 @@
                             <a href="<?php echo e(route('meeting.index')); ?>" class="nav-link small">
                                 <i class="fas fa-calendar-day me-2"></i> 
                                 <span>Jadwal Kegiatan</span>
+                                <?php if($countDinas > 0): ?>
+                                    <span class="badge bg-danger rounded-pill badge-notif ms-auto"><?php echo e($countDinas); ?></span>
+                                <?php endif; ?>
                             </a>
                         </li>
                         <li>
@@ -245,9 +272,6 @@
                 <a href="<?php echo e(route('manajemen.mitra.index')); ?>" class="nav-link">
                     <i class="fas fa-id-card me-2"></i> <span>Master Mitra</span>
                 </a>
-                <a href="<?php echo e(route('manajemen.kegiatan.index')); ?>" class="nav-link">
-                    <i class="fas fa-tasks me-2"></i> <span>Master Kegiatan</span>
-                </a>
             <?php endif; ?>
 
             <?php if(Auth::user()->team && Auth::user()->team->nama_tim === 'Subbagian Umum'): ?>
@@ -274,10 +298,10 @@
 
         
         <div class="menu-divider">Smart Ecosystem</div>
-        <a href="http://localhost:8000/sso/login" class="nav-link" target="_blank">
+        <a href="<?php echo e(route('ticket.admin.index')); ?>" class="nav-link <?php echo e(Route::is('ticket.admin.*') ? 'active' : ''); ?>">
             <i class="fas fa-ticket-alt me-2 text-primary"></i> <span>SEpintu Ticket</span>
         </a>
-        <a href="http://localhost:8001" class="nav-link" target="_blank">
+        <a href="<?php echo e(route('kms.admin.index')); ?>" class="nav-link <?php echo e(Route::is('kms.admin.*') ? 'active' : ''); ?>">
             <i class="fas fa-book-reader me-2 text-success"></i> <span>SEpintu KMS</span>
         </a>
 
@@ -388,6 +412,8 @@
         <?php echo $__env->yieldContent('content'); ?>
     </div>
 </div>
+
+<?php echo $__env->yieldPushContent('modals'); ?>
 
 <form id="logout-form" action="<?php echo e(route('logout')); ?>" method="POST" class="d-none"><?php echo csrf_field(); ?></form>
 
