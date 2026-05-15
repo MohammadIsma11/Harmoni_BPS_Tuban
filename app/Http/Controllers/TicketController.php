@@ -73,10 +73,29 @@ class TicketController extends Controller
             $query->where('status', $request->status);
         }
 
-        $tickets = $query->latest()->paginate(10)->withQueryString();
+        $tickets = $query->with('category')->latest()->paginate(10)->withQueryString();
         $categories = TicketCategory::all();
 
-        return view('ticket.admin.index', compact('tickets', 'categories'));
+        // High-performance stats in 1 query
+        $statsRaw = Ticket::select('status', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->get()
+            ->pluck('total', 'status');
+        
+        $stats = [
+            'total' => $statsRaw->sum(),
+            'open' => $statsRaw['open'] ?? 0,
+            'assigned' => $statsRaw['assigned'] ?? 0,
+            'onprogress' => $statsRaw['onprogress'] ?? 0,
+            'check wa' => $statsRaw['check wa'] ?? 0,
+            'closed' => $statsRaw['closed'] ?? 0,
+        ];
+
+        // Efficient assignee name loading
+        $allAssigneeIds = $tickets->pluck('assigned_to_ids')->flatten()->unique()->filter()->toArray();
+        $assigneeNames = User::whereIn('id', $allAssigneeIds)->pluck('nama_lengkap', 'id');
+
+        return view('ticket.admin.index', compact('tickets', 'categories', 'stats', 'assigneeNames'));
     }
 
     /**
@@ -248,13 +267,20 @@ class TicketController extends Controller
 
         }
 
-        if (json_encode($oldAssignees) != json_encode($request->assigned_to_ids)) {
-            $newNames = User::whereIn('id', $request->assigned_to_ids ?? [])->pluck('nama_lengkap')->toArray();
+        $newAssignees = $request->input('assigned_to_ids') ?? [];
+        $oldAssignees = is_array($oldAssignees) ? $oldAssignees : [];
+
+        // Sort both arrays to ensure order doesn't affect comparison
+        sort($newAssignees);
+        sort($oldAssignees);
+
+        if ($newAssignees !== $oldAssignees && $request->has('assigned_to_ids')) {
+            $newNames = User::whereIn('id', $newAssignees)->pluck('nama_lengkap')->toArray();
             TicketActivity::create([
                 'ticket_id' => $ticket->id,
                 'user_id' => Auth::id(),
                 'type' => 'assigned_to',
-                'new_value' => json_encode($request->assigned_to_ids),
+                'new_value' => json_encode($newAssignees),
                 'message' => Auth::user()->nama_lengkap . ' menugaskan tiket ke: ' . (empty($newNames) ? 'Tanpa Petugas' : implode(', ', $newNames)),
             ]);
         }
@@ -283,6 +309,21 @@ class TicketController extends Controller
     }
 
     /**
+     * AJAX: Check for similar articles in KMS
+     */
+    public function checkKmsDuplicate(Request $request)
+    {
+        $subject = $request->get('subject');
+        if (!$subject) return response()->json([]);
+
+        $duplicates = \App\Models\KnowledgeArticle::where('title', 'ilike', '%' . $subject . '%')
+            ->select('id', 'title', 'content')
+            ->get();
+
+        return response()->json($duplicates);
+    }
+
+    /**
      * ADMIN: Push to KMS
      */
     public function pushToKms(Ticket $ticket)
@@ -293,7 +334,7 @@ class TicketController extends Controller
         }
 
         if ($ticket->pushed_to_kms) {
-            return;
+            return redirect()->back()->with('error', 'Tiket ini sudah pernah dikirim ke KMS.');
         }
 
         // Map TicketCategory to KnowledgeCategory
@@ -302,14 +343,69 @@ class TicketController extends Controller
             ['name' => $ticket->category->name]
         );
 
+        // Build content with problem and solution
+        $solution = $ticket->solution;
+        if (empty($solution)) {
+            $lastAdminReply = $ticket->replies()->where('is_admin', true)->latest()->first();
+            if ($lastAdminReply) {
+                $solution = $lastAdminReply->message;
+            } else {
+                $solution = 'Belum ada solusi detail.';
+            }
+        }
+
+        // Helper to format plain text lists into beautiful icon-based lists
+        $formatToList = function($text) {
+            $lines = explode("\n", $text);
+            $formatted = [];
+
+            foreach ($lines as $line) {
+                $trimmed = trim($line);
+                
+                // Detect unordered list (- or *) -> Replace with a nice bullet icon
+                if (preg_match('/^[\-\*\+]\s+(.*)/', $trimmed, $matches)) {
+                    $formatted[] = '<div class="d-flex align-items-start mb-2 ms-3">
+                                        <i class="fas fa-check-circle text-primary mt-1 me-2" style="font-size: 0.8rem;"></i>
+                                        <span>' . $matches[1] . '</span>
+                                    </div>';
+                } 
+                // Detect ordered list (1. or 1)) -> Replace with a badge
+                elseif (preg_match('/^(\d+)[\.\)]\s+(.*)/', $trimmed, $matches)) {
+                    $formatted[] = '<div class="d-flex align-items-start mb-2 ms-2">
+                                        <span class="badge bg-primary rounded-pill me-2 mt-1" style="font-size: 0.6rem; min-width: 1.5rem;">' . $matches[1] . '</span>
+                                        <span class="fw-bold text-dark">' . $matches[2] . '</span>
+                                    </div>';
+                }
+                // Regular line
+                else {
+                    $formatted[] = empty($trimmed) ? '<br>' : '<div class="mb-2">' . $line . '</div>';
+                }
+            }
+            
+            return implode("\n", $formatted);
+        };
+
+        $content = "<strong>Kendala/Masalah:</strong><br>" . $formatToList($ticket->description) . "<br><br><strong>Solusi/Jawaban:</strong><br>" . $formatToList($solution);
+
+        // Generate auto tags
+        $tagsArray = [$ticket->category->name, 'KMS'];
+        $subjectKeywords = explode(' ', $ticket->subject);
+        foreach ($subjectKeywords as $word) {
+            if (strlen($word) > 3) $tagsArray[] = strtolower($word);
+        }
+        $tags = implode(', ', array_unique(array_slice($tagsArray, 0, 5)));
+
         // Internal push to Knowledge module
         \App\Models\KnowledgeArticle::create([
             'category_id' => $knowledgeCategory->id,
-            'author_id' => $ticket->assigned_to ?: Auth::id(),
+            'author_id' => Auth::id(),
+            'ticket_id' => $ticket->id,
             'title' => $ticket->subject,
-            'slug' => Str::slug($ticket->subject) . '-' . time(),
-            'content' => $ticket->solution ?: $ticket->description,
+            'slug' => \Illuminate\Support\Str::slug($ticket->subject) . '-' . time(),
+            'content' => $content,
             'is_published' => false,
+            'verification_status' => 'pending_kms',
+            'tags' => $tags
         ]);
 
         $ticket->update(['pushed_to_kms' => true]);
@@ -318,7 +414,21 @@ class TicketController extends Controller
             'ticket_id' => $ticket->id,
             'user_id' => Auth::id(),
             'type' => 'pushed_to_kms',
-            'message' => Auth::user()->nama_lengkap . ' mengirim tiket ini ke sistem KMS untuk dipublikasi.',
+            'message' => Auth::user()->nama_lengkap . ' mengirim tiket ini ke sistem KMS untuk diproses verifikasi.',
         ]);
+
+        return redirect()->back()->with('success', 'Tiket berhasil dikirim ke KMS dan menunggu verifikasi.');
+    }
+
+    /**
+     * ADMIN: Delete Ticket
+     */
+    public function destroy(Ticket $ticket)
+    {
+        Gate::authorize('can-manage-ticket', $ticket);
+        
+        $ticket->delete();
+        
+        return redirect()->route('ticket.admin.index')->with('success', 'Tiket berhasil dihapus.');
     }
 }

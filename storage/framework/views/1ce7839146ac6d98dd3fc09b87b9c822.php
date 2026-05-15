@@ -55,16 +55,16 @@
 
     <div class="row g-3 mb-4">
         <?php
-            $stats = [
-                ['label' => 'Total Tiket', 'count' => \App\Models\Ticket::count(), 'icon' => 'fa-ticket-alt', 'color' => 'primary'],
-                ['label' => 'Open', 'count' => \App\Models\Ticket::where('status', 'open')->count(), 'icon' => 'fa-envelope-open', 'color' => 'warning'],
-                ['label' => 'Assigned', 'count' => \App\Models\Ticket::where('status', 'assigned')->count(), 'icon' => 'fa-user-tag', 'color' => 'info'],
-                ['label' => 'On Progress', 'count' => \App\Models\Ticket::where('status', 'onprogress')->count(), 'icon' => 'fa-spinner', 'color' => 'primary'],
-                ['label' => 'Check WA', 'count' => \App\Models\Ticket::where('status', 'check wa')->count(), 'icon' => 'fa-comment-alt', 'color' => 'success'],
-                ['label' => 'Closed', 'count' => \App\Models\Ticket::where('status', 'closed')->count(), 'icon' => 'fa-check-circle', 'color' => 'secondary'],
+            $statsCards = [
+                ['label' => 'Total Tiket', 'count' => $stats['total'], 'icon' => 'fa-ticket-alt', 'color' => 'primary'],
+                ['label' => 'Open', 'count' => $stats['open'], 'icon' => 'fa-envelope-open', 'color' => 'warning'],
+                ['label' => 'Assigned', 'count' => $stats['assigned'], 'icon' => 'fa-user-tag', 'color' => 'info'],
+                ['label' => 'On Progress', 'count' => $stats['onprogress'], 'icon' => 'fa-spinner', 'color' => 'primary'],
+                ['label' => 'Check WA', 'count' => $stats['check wa'], 'icon' => 'fa-comment-alt', 'color' => 'success'],
+                ['label' => 'Closed', 'count' => $stats['closed'], 'icon' => 'fa-check-circle', 'color' => 'secondary'],
             ];
         ?>
-        <?php $__currentLoopData = $stats; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php $__currentLoopData = $statsCards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
         <div class="col-md-2" style="flex: 1;">
             <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
                 <div class="d-flex align-items-center justify-content-between">
@@ -88,6 +88,7 @@
                     <tr>
                         <th class="ps-4 py-3 text-muted small fw-bold">TIKET & PELAPOR</th>
                         <th class="py-3 text-muted small fw-bold">KATEGORI</th>
+                        <th class="py-3 text-muted small fw-bold">DESKRIPSI</th>
                         <th class="py-3 text-muted small fw-bold text-center">STATUS</th>
                         <th class="py-3 text-muted small fw-bold">PJ / ASSIGNEE</th>
                         <th class="pe-4 py-3 text-muted small fw-bold text-end">AKSI</th>
@@ -100,12 +101,18 @@
                             <div class="fw-bold text-dark"><?php echo e($ticket->subject); ?></div>
                             <div class="d-flex align-items-center mt-1">
                                 <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill me-2" style="font-size: 0.65rem;"><?php echo e($ticket->tracking_id); ?></span>
-                                <small class="text-muted"><?php echo e($ticket->reporter_name); ?> (<?php echo e($ticket->reporter_organization); ?>)</small>
+                                <small class="text-muted"><?php echo e($ticket->reporter_name); ?></small>
                             </div>
                         </td>
                         <td>
                             <div class="small text-dark fw-bold"><?php echo e($ticket->category->name); ?></div>
-                            <div class="small text-muted" style="font-size: 0.65rem;">Priority: <?php echo e(strtoupper($ticket->priority)); ?></div>
+                            <div class="small text-muted" style="font-size: 0.65rem;"><?php echo e($ticket->reporter_organization); ?></div>
+                        </td>
+                        <td>
+                            <div class="small text-muted" style="max-width: 200px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                <?php echo e(strip_tags($ticket->description)); ?>
+
+                            </div>
                         </td>
                         <td class="text-center">
                             <?php
@@ -122,32 +129,23 @@
                                 <?php echo e($st['label']); ?>
 
                             </span>
-                            <?php if($ticket->status === 'check wa'): ?>
-                                <div class="mt-1">
-                                    <small class="badge bg-light text-dark border rounded-pill" style="font-size: 0.55rem;">
-                                        <i class="fab fa-whatsapp text-success me-1"></i><?php echo e($ticket->wa_status); ?>
-
-                                    </small>
-                                </div>
-                            <?php endif; ?>
                         </td>
                         <td>
                             <?php
-                                $assigneeIds = $ticket->assigned_to_ids ?? [];
-                                $assignees = \App\Models\User::whereIn('id', $assigneeIds)->get();
+                                $ids = $ticket->assigned_to_ids ?? [];
                             ?>
-                            <?php $__empty_2 = true; $__currentLoopData = $assignees; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pj): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
-                                <span class="badge bg-light text-dark border rounded-pill small mb-1"><?php echo e($pj->nama_lengkap); ?></span>
+                            <?php $__empty_2 = true; $__currentLoopData = $ids; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
+                                <span class="badge bg-light text-dark border rounded-pill small mb-1" style="font-size: 0.6rem;"><?php echo e($assigneeNames[$id] ?? 'Unknown'); ?></span>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
-                                <span class="text-muted small italic">Belum ditugaskan</span>
+                                <span class="text-muted small italic" style="font-size: 0.6rem;">Belum ditugaskan</span>
                             <?php endif; ?>
                         </td>
                         <td class="pe-4 text-end">
                             <div class="d-flex gap-1 justify-content-end">
                                 <?php if($ticket->status === 'closed' && !$ticket->pushed_to_kms): ?>
-                                    <form action="<?php echo e(route('ticket.admin.push', $ticket->id)); ?>" method="POST" onsubmit="return confirm('Push solusi tiket ini ke sistem KMS?')">
+                                    <form action="<?php echo e(route('ticket.admin.push', $ticket->id)); ?>" method="POST" class="form-push-kms">
                                         <?php echo csrf_field(); ?>
-                                        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3" title="Push ke KMS">
+                                        <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 btn-push-confirm" title="Push ke KMS">
                                             <i class="fas fa-share-square me-1"></i> Push
                                         </button>
                                     </form>
@@ -159,6 +157,13 @@
                                 <a href="<?php echo e(route('ticket.admin.show', $ticket->id)); ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3">
                                     <i class="fas fa-eye me-1"></i> Detail
                                 </a>
+                                <form action="<?php echo e(route('ticket.admin.destroy', $ticket->id)); ?>" method="POST" class="form-delete-ticket">
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
+                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 btn-delete-ticket" title="Hapus Tiket">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -182,5 +187,49 @@
     </div>
 </div>
 <?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('scripts'); ?>
+<script>
+    $(document).ready(function() {
+        $('.btn-push-confirm').on('click', function() {
+            const form = $(this).closest('form');
+            Swal.fire({
+                title: 'Push ke KMS?',
+                text: "Solusi tiket ini akan dibagikan ke Knowledge Management System.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0058a8',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Push Sekarang!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+
+        $('.btn-delete-ticket').on('click', function() {
+            const form = $(this).closest('form');
+            Swal.fire({
+                title: 'Hapus Tiket?',
+                text: "Data tiket dan riwayat percakapan akan dihapus permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+</script>
+<?php $__env->stopPush(); ?>
 
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/resources/views/ticket/admin/index.blade.php ENDPATH**/ ?>

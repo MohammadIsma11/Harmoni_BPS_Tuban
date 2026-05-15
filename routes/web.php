@@ -190,6 +190,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/{ticket}/reply', [TicketController::class, 'storeReply'])->name('reply');
         Route::patch('/{ticket}', [TicketController::class, 'update'])->name('update');
         Route::post('/{ticket}/push', [TicketController::class, 'pushToKms'])->name('push');
+        Route::delete('/{ticket}', [TicketController::class, 'destroy'])->name('destroy');
+        Route::get('/check-kms-duplicate', [TicketController::class, 'checkKmsDuplicate'])->name('check-kms-duplicate');
     });
 
     // 5. SEpintu KMS Management (Admin/Pegawai)
@@ -198,6 +200,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/{article}/edit', [KmsController::class, 'edit'])->name('edit');
         Route::put('/{article}', [KmsController::class, 'update'])->name('update');
         Route::delete('/{article}', [KmsController::class, 'destroy'])->name('destroy');
+        Route::post('/{article}/verify', [KmsController::class, 'verify'])->name('verify');
+        Route::post('/{article}/request-public', [KmsController::class, 'requestPublic'])->name('request-public');
     });
 
     // 3. Gatekeeper & Realisasi (Tim Umum)

@@ -55,36 +55,36 @@ class AppServiceProvider extends ServiceProvider
         });
 
 
-        // 3. LOGIKA NOTIFIKASI BADGE (View Composer)
+        // 3. LOGIKA NOTIFIKASI BADGE (View Composer - Optimized with Caching)
         View::composer('*', function ($view) {
             if (Auth::check()) {
                 $user = Auth::user();
-                
-                // --- A. Hitung Tugas Lapangan (Tipe 1) ---
-                // Muncul langsung setelah di-assign tanpa nunggu hari-H
-                $countLapangan = Agenda::where('assigned_to', $user->id)
-                    ->where('activity_type_id', 1)
-                    ->where('status_laporan', 'Pending')
-                    ->count();
+                $cacheKey = 'user_notif_counts_' . $user->id;
 
-                // --- B. Hitung Kegiatan Dinas (Tipe 2 & 3) ---
-                // Logika: Ambil yang statusnya Pending, lalu kurangi yang sudah TTD (Presensi)
-                $allKegiatanIds = Agenda::where('assigned_to', $user->id)
-                    ->whereIn('activity_type_id', [2, 3])
-                    ->where('status_laporan', 'Pending')
-                    ->pluck('id');
+                $notifs = \Illuminate\Support\Facades\Cache::remember($cacheKey, 30, function() use ($user) {
+                    // A. Hitung Tugas Lapangan (Tipe 1)
+                    $countLapangan = Agenda::where('assigned_to', $user->id)
+                        ->where('activity_type_id', 1)
+                        ->where('status_laporan', 'Pending')
+                        ->count();
 
-                $sudahAbsenCount = MeetingPresence::whereIn('agenda_id', $allKegiatanIds)
-                    ->where('user_id', $user->id)
-                    ->count();
+                    // B. Hitung Kegiatan Dinas (Tipe 2 & 3)
+                    $allKegiatanIds = Agenda::where('assigned_to', $user->id)
+                        ->whereIn('activity_type_id', [2, 3])
+                        ->where('status_laporan', 'Pending')
+                        ->pluck('id');
 
-                $countKegiatan = $allKegiatanIds->count() - $sudahAbsenCount;
+                    $sudahAbsenCount = MeetingPresence::whereIn('agenda_id', $allKegiatanIds)
+                        ->where('user_id', $user->id)
+                        ->count();
 
-                // Kirim variabel ke sidebar (layouts/app)
-                $view->with([
-                    'notifLapangan' => $countLapangan,
-                    'notifKegiatan' => $countKegiatan
-                ]);
+                    return [
+                        'notifLapangan' => $countLapangan,
+                        'notifKegiatan' => $allKegiatanIds->count() - $sudahAbsenCount
+                    ];
+                });
+
+                $view->with($notifs);
             }
         });
     }

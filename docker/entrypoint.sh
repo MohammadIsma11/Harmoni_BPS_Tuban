@@ -19,21 +19,26 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --no-interaction
 fi
 
-# Create storage link if not exists (force recreate for Docker/Linux)
-echo "Recreating Storage Link..."
-rm -rf public/storage
-mkdir -p storage/app/public
-php artisan storage:link --no-interaction
+# Create storage link if not exists
+echo "Checking Storage Link..."
+if [ ! -L public/storage ]; then
+    echo "Recreating Storage Link..."
+    rm -rf public/storage
+    mkdir -p storage/app/public
+    php artisan storage:link --no-interaction || echo "Warning: Could not create storage link"
+else
+    echo "Storage Link already exists."
+fi
 
 # Run migrations
 echo "Running Migrations..."
-php artisan migrate --force --no-interaction
+php artisan migrate --force --no-interaction || echo "Warning: Migration failed"
 
-# Optimizing Laravel
+# Optimizing Laravel (don't let failure here stop the app)
 echo "Optimizing Application..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:cache || echo "Warning: Config cache failed"
+php artisan route:cache || echo "Warning: Route cache failed"
+php artisan view:cache || echo "Warning: View cache failed"
 
 # Correct permissions for storage and bootstrap/cache
 echo "Fixing Permissions..."

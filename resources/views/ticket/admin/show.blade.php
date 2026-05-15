@@ -278,7 +278,7 @@
                         <p class="small text-muted mb-3">Tiket selesai. Bagikan solusi ini ke Knowledge Management System (KMS)?</p>
                         <form action="{{ route('ticket.admin.push', $ticket->id) }}" method="POST">
                             @csrf
-                            <button type="submit" class="btn btn-success w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm">
+                            <button type="button" class="btn btn-success w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm btn-push-kms" data-subject="{{ $ticket->subject }}">
                                 <i class="fas fa-share-square me-2"></i> Push ke KMS
                             </button>
                         </form>
@@ -299,7 +299,7 @@
                 <p class="small text-muted mb-4">Tiket ini sudah selesai. Semua pegawai dapat membantu membagikan solusi ini ke sistem KMS.</p>
                 <form action="{{ route('ticket.admin.push', $ticket->id) }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn btn-success w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm">
+                    <button type="button" class="btn btn-success w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm btn-push-kms" data-subject="{{ $ticket->subject }}">
                         <i class="fas fa-share-square me-2"></i> Bagikan Solusi
                     </button>
                 </form>
@@ -331,12 +331,97 @@
         box-shadow: 0 0 0 1px #e2e8f0;
     }
 </style>
+{{-- Modal Duplicate Check --}}
+<div class="modal fade" id="modalDuplicateKms" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 p-4">
+                <h5 class="modal-title fw-bold">Peringatan: Topik Serupa Ditemukan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <div class="alert alert-warning border-0 rounded-4 mb-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Topik yang akan Anda kirim kemungkinan sudah ada di KMS. Silakan tinjau daftar di bawah ini.
+                </div>
+                <div id="duplicate-list" class="list-group list-group-flush rounded-4 border overflow-hidden">
+                    {{-- Dynamically filled --}}
+                </div>
+                <p class="mt-4 text-center text-muted small">
+                    Apakah Anda tetap ingin mengirimkan topik ini ke KMS?
+                </p>
+            </div>
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                <button type="button" id="confirm-push-anyway" class="btn btn-success rounded-pill px-4 fw-bold">Tetap Push ke KMS</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     $(document).ready(function() {
         $('#select-petugas').select2({
             placeholder: 'Pilih Petugas...',
             allowClear: true
+        });
+
+        let currentPushForm = null;
+
+        $('.btn-push-kms').on('click', function(e) {
+            e.preventDefault();
+            const btn = $(this);
+            const subject = btn.data('subject');
+            currentPushForm = btn.closest('form');
+
+            // Show loading state
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Mengecek duplikat...');
+
+            $.get("{{ route('ticket.admin.check-kms-duplicate') }}", { subject: subject }, function(data) {
+                btn.prop('disabled', false).html('<i class="fas fa-share-square me-2"></i> ' + (btn.hasClass('btn-success') ? 'Push ke KMS' : 'Bagikan Solusi'));
+
+                if (data.length > 0) {
+                    let html = '';
+                    data.forEach(item => {
+                        html += `
+                            <div class="list-group-item p-3">
+                                <h6 class="fw-bold mb-1 text-dark">${item.title}</h6>
+                                <p class="small text-muted mb-0 text-truncate" style="max-width: 100%">${item.content}</p>
+                            </div>
+                        `;
+                    });
+                    $('#duplicate-list').html(html);
+                    $('#modalDuplicateKms').modal('show');
+                } else {
+                    Swal.fire({
+                        title: 'Push ke KMS?',
+                        text: "Solusi tiket ini akan dibagikan ke Knowledge Management System.",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0058a8',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Ya, Push!',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            currentPushForm.submit();
+                        } else {
+                            btn.prop('disabled', false).html('<i class="fas fa-share-square me-2"></i> Push ke KMS');
+                        }
+                    });
+                }
+            }).fail(function() {
+                btn.prop('disabled', false).html('<i class="fas fa-share-square me-2"></i> Push ke KMS');
+                Swal.fire('Error', 'Gagal mengecek duplikat.', 'error');
+            });
+        });
+
+        $('#confirm-push-anyway').on('click', function() {
+            if (currentPushForm) {
+                currentPushForm.submit();
+            }
         });
     });
 </script>
