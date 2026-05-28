@@ -20,6 +20,15 @@ class Tematik extends Model
         'tanggal',
         'status',
         'lat',
-        'lng'
+        'lng',
+        'assignment_report_id'
     ];
+
+    /**
+     * Relasi balik ke Laporan Penugasan
+     */
+    public function assignmentReport()
+    {
+        return $this->belongsTo(AssignmentReport::class, 'assignment_report_id');
+    }
 }

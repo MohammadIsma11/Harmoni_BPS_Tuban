@@ -76,6 +76,7 @@ class TematikController extends Controller
             'kecamatan' => 'nullable|string|max:100',
             'desa' => 'nullable|string|max:100',
             'sls' => 'nullable|string|max:200',
+            'tanggal' => 'required|date',
         ]);
 
         $tematik->update($validated);

@@ -446,6 +446,37 @@ class DashboardController extends Controller
         return '#94a3b8';
     }
 
+    public function editZoomLink()
+    {
+        $user = Auth::user();
+        if ($user->role !== 'Admin' && $user->username !== 'ketua.tim') {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $zoomLink = \App\Models\Setting::getValue('zoom_link', 'https://zoom.us/j/85755461223?pwd=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+
+        return view('admin.settings.zoom', compact('zoomLink'));
+    }
+
+    public function updateZoomLink(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'Admin' && $user->username !== 'ketua.tim') {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $validated = $request->validate([
+            'zoom_link' => 'required|url|max:500',
+        ]);
+
+        \App\Models\Setting::updateOrCreate(
+            ['key' => 'zoom_link'],
+            ['value' => $validated['zoom_link']]
+        );
+
+        return redirect()->back()->with('success', 'Link Zoom berhasil diperbarui.');
+    }
+
     public function panduanIndex()
     {
         return view('panduan.index');

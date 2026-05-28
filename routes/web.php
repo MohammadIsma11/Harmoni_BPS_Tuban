@@ -40,6 +40,7 @@ Route::prefix('tickets')->name('ticket.public.')->group(function () {
 Route::prefix('kms')->name('kms.public.')->group(function () {
     Route::get('/', [KmsController::class, 'publicIndex'])->name('index');
     Route::get('/article/{article:slug}', [KmsController::class, 'show'])->name('show');
+    Route::post('/article/{article:slug}/feedback', [KmsController::class, 'feedback'])->name('feedback');
 });
 
 /*
@@ -68,6 +69,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/super-access', [SuperAccessController::class, 'index'])->name('super.access.index');
     Route::get('/panduan', [DashboardController::class, 'panduanIndex'])->name('panduan.index');
+    Route::get('/admin/settings/zoom', [DashboardController::class, 'editZoomLink'])->name('admin.settings.zoom');
+    Route::post('/admin/settings/zoom', [DashboardController::class, 'updateZoomLink'])->name('admin.settings.zoom.update');
     Route::get('/assignment/{id}/download-spt', [AssignmentController::class, 'downloadSPT'])->name('assignment.download-spt');
     Route::post('/switch-module', [ModuleController::class, 'switchMode'])->name('module.switch');
     Route::get('/sso/check', [SSOController::class, 'check'])->name('sso.check');

@@ -11,7 +11,8 @@ class KnowledgeArticle extends Model
 
     protected $fillable = [
         'category_id', 'author_id', 'ticket_id', 'title', 'slug', 
-        'content', 'view_count', 'is_published', 'verification_status', 'is_public', 'tags'
+        'content', 'view_count', 'is_published', 'verification_status', 'is_public', 'tags',
+        'helpful_count', 'not_helpful_count'
     ];
 
     public function category()

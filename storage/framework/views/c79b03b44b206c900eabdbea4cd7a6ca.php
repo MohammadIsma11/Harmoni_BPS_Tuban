@@ -109,9 +109,7 @@
                 <a href="<?php echo e(route('monitoring.index')); ?>" class="nav-link">
                     <i class="fas fa-calendar-check me-2"></i> <span>Timeline Agenda</span>
                 </a>
-                <a href="<?php echo e(route('tematik.index')); ?>" class="nav-link <?php echo e(Route::is('tematik.*') ? 'active' : ''); ?>">
-                    <i class="fas fa-map-marked-alt me-2 text-success"></i> <span>Monitoring Tematik</span>
-                </a>
+
             <?php endif; ?>
 
             
@@ -304,9 +302,17 @@
         <a href="<?php echo e(route('kms.admin.index')); ?>" class="nav-link <?php echo e(Route::is('kms.admin.*') ? 'active' : ''); ?>">
             <i class="fas fa-book-reader me-2 text-success"></i> <span>SEpintu KMS</span>
         </a>
+        <a href="<?php echo e(route('tematik.index')); ?>" class="nav-link <?php echo e(Route::is('tematik.*') ? 'active' : ''); ?>">
+            <i class="fas fa-map-marked-alt me-2 text-success"></i> <span>SEpintu Peta</span>
+        </a>
 
         
         <div class="menu-divider">Sistem</div>
+        <?php if(Auth::user()->role === 'Admin' || Auth::user()->username === 'ketua.tim'): ?>
+            <a href="<?php echo e(route('admin.settings.zoom')); ?>" class="nav-link <?php echo e(Route::is('admin.settings.zoom') ? 'active' : ''); ?>">
+                <i class="fas fa-video me-2 text-primary"></i> <span>Pengaturan Zoom</span>
+            </a>
+        <?php endif; ?>
         <a href="<?php echo e(route('panduan.index')); ?>" class="nav-link">
             <i class="fas fa-book me-2"></i> <span>Panduan Pengguna</span>
         </a>

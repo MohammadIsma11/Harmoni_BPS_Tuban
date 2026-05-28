@@ -114,7 +114,7 @@ class HistoryController extends Controller
     public function historyUpdate(Request $request, $id)
     {
         // $id adalah ID AssignmentReport
-        $report = \App\Models\AssignmentReport::with('agenda')->findOrFail($id);
+        $report = \App\Models\AssignmentReport::with(['agenda', 'user'])->findOrFail($id);
         $agenda = $report->agenda;
 
         if (!$this->canAccess($agenda)) {
@@ -130,6 +130,9 @@ class HistoryController extends Controller
             'permasalahan' => 'required',
             'solusi_antisipasi' => 'required',
             'fotos.*' => 'image|mimes:jpeg,png,jpg|max:10240',
+            'lat' => 'required|numeric',
+            'lng' => 'required|numeric',
+            'sls' => 'nullable|string|max:200',
         ]);
 
         try {
@@ -148,7 +151,40 @@ class HistoryController extends Controller
                 'lokasi_tujuan' => $lokasiLengkap,
                 'tanggal_lapor' => $request->tanggal_pelaksanaan,
                 'isi_laporan'   => json_encode($reportData),
+                'lat'           => $request->lat,
+                'lng'           => $request->lng,
+                'sls'           => $request->sls,
             ]);
+
+            // Sinkronisasi data di Sepintu Peta (Tematik)
+            $memberNames = \App\Models\User::whereIn('id', 
+                \App\Models\Agenda::where('title', $agenda->title)
+                    ->where('event_date', $agenda->event_date)
+                    ->where('nomor_surat_tugas', $agenda->nomor_surat_tugas)
+                    ->pluck('assigned_to')
+            )->pluck('nama_lengkap')->toArray();
+            $memberStr = implode(', ', $memberNames);
+
+            $tematikData = [
+                'nama'                 => $agenda->title,
+                'pic'                  => $report->user->nama_lengkap ?? auth()->user()->nama_lengkap,
+                'member'               => $memberStr,
+                'kecamatan'            => $request->kecamatan,
+                'desa'                 => $request->desa,
+                'sls'                  => $request->sls,
+                'judul'                => $agenda->title,
+                'tanggal'              => $request->tanggal_pelaksanaan,
+                'status'               => 'Active',
+                'lat'                  => $request->lat,
+                'lng'                  => $request->lng,
+                'assignment_report_id' => $report->id
+            ];
+
+            if ($tematik = \App\Models\Tematik::where('assignment_report_id', $report->id)->first()) {
+                $tematik->update($tematikData);
+            } else {
+                \App\Models\Tematik::create($tematikData);
+            }
 
             // 2. Update Agenda snapshot (selalu ambil yang terbaru dari laporan)
             $agenda->update([

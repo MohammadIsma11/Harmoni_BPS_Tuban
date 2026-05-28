@@ -27,4 +27,12 @@ class AssignmentReport extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    /**
+     * Relasi ke Tematik (Titik Peta)
+     */
+    public function tematik()
+    {
+        return $this->hasOne(Tematik::class, 'assignment_report_id');
+    }
 }

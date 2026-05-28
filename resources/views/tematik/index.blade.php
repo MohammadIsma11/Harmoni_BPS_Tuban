@@ -12,7 +12,7 @@
                             <i class="fas fa-map-marked-alt text-primary fa-lg"></i>
                         </div>
                         <div>
-                            <h5 class="fw-bold mb-0">Monitoring Tematik SIG</h5>
+                            <h5 class="fw-bold mb-0">Sepintu Peta</h5>
                             <p class="text-muted small mb-0">Integrasi Data Spasial & Pelaporan Wilayah</p>
                         </div>
                     </div>
@@ -208,7 +208,7 @@
                         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                             <div class="row g-0">
                                 <div class="col-lg-5 bg-primary bg-opacity-10 p-5 d-flex flex-column justify-content-center">
-                                    <h3 class="fw-bold text-primary mb-3">Input Laporan Berbasis Wilayah</h3>
+                                    <h3 class="fw-bold text-primary mb-3">Input / Edit Laporan</h3>
                                     <p class="text-muted mb-5">Gunakan kotak pencarian pada peta di sebelah kanan untuk menemukan lokasi kegiatan. Sistem akan mendeteksi detail RT/RW secara otomatis.</p>
                                     
                                     <div class="mb-4">
@@ -234,6 +234,8 @@
                                 <div class="col-lg-7">
                                     <div class="card-body p-5">
                                         <form id="form-unified">
+                                            <input type="hidden" id="in-id">
+                                            <input type="hidden" id="in-status" value="Active">
                                             <div class="mb-4">
                                                 <div class="position-relative">
                                                     <div id="form-map" class="rounded-4 border overflow-hidden shadow-sm" style="height: 300px;"></div>
@@ -259,6 +261,10 @@
 
                                             <div class="mb-4">
                                                 <label class="fw-bold small text-muted mb-2 text-uppercase">2. Detail Kegiatan</label>
+                                                <div class="form-group mb-3">
+                                                    <label class="small text-muted mb-1 ps-1">Tanggal Kegiatan</label>
+                                                    <input type="date" id="in-tanggal" class="form-control rounded-3 py-2 px-3 mb-2" value="{{ date('Y-m-d') }}" required>
+                                                </div>
                                                 <div class="form-group mb-3">
                                                     <input type="text" id="in-judul" class="form-control rounded-3 py-2 px-3" placeholder="Judul Kegiatan (Contoh: Audit Produksi Batik)" required>
                                                 </div>
@@ -376,6 +382,8 @@ $(document).ready(function() {
     let slsData, kecData, desaData;
     let currentKec = '', currentDesa = '';
     let pieChart, barChart;
+    let deleteModalInstance;
+    let barChartLabels = [], barChartData = [];
 
     // 1. INIT ALL MAPS
     function initMaps() {
@@ -433,6 +441,8 @@ $(document).ready(function() {
             $('#btn-submit-report').prop('disabled', false);
         };
 
+
+
         // Load Assets
         Promise.all([
             fetch('{{ asset("geojson/kecamatan.geojson") }}').then(r => r.json()),
@@ -448,6 +458,52 @@ $(document).ready(function() {
             console.error("GeoJSON Load Error:", err);
             Swal.fire('Error', 'Gagal memuat data geospasial. Silakan refresh halaman.', 'error');
         });
+    }
+
+    function resetFormState() {
+        $('#in-id').val('');
+        $('#in-status').val('Active');
+        $('#form-unified')[0].reset();
+        $('#in-tanggal').val(new Date().toISOString().split('T')[0]);
+        $('#form-loc-card').addClass('d-none');
+        $('#btn-submit-report').html('<i class="fas fa-save me-2"></i> SIMPAN LAPORAN KE PETA');
+        if (formMarker) {
+            formMap.removeLayer(formMarker);
+            formMarker = null;
+        }
+    }
+
+    function openEditForm(item) {
+        $('#in-id').val(item.id);
+        $('#in-judul').val(item.judul);
+        $('#in-tanggal').val(item.tanggal ? item.tanggal.split('T')[0] : new Date().toISOString().split('T')[0]);
+        $('#in-kec').val(item.kecamatan);
+        $('#in-desa').val(item.desa);
+        $('#in-sls').val(item.sls);
+        if (item.member) {
+            const members = item.member.split(',').map(m => m.trim()).filter(m => m);
+            $('#in-member').val(members).trigger('change');
+        } else {
+            $('#in-member').val([]).trigger('change');
+        }
+        $('#in-status').val(item.status || 'Active');
+        $('#btn-submit-report').html('<i class="fas fa-save me-2"></i> PERBARUI LAPORAN');
+        if (item.lat && item.lng) {
+            updateFormLocation(parseFloat(item.lat), parseFloat(item.lng), {
+                kec: item.kecamatan,
+                desa: item.desa,
+                sls: item.sls
+            });
+        }
+        $('[data-bs-target="#panel-form"]').tab('show');
+    }
+
+    function getDecodedData(value) {
+        try {
+            return JSON.parse(decodeURIComponent(value));
+        } catch (e) {
+            return null;
+        }
     }
 
     function initMemberSelect(users) {
@@ -653,13 +709,17 @@ $(document).ready(function() {
         // Info Table & Bar Chart
         $.get('{{ route("tematik.api.info") }}', function(res) {
             let html = '';
-            const labels = [], data = [];
+            barChartLabels = [];
+            barChartData = [];
             res.forEach(r => {
                 html += `<tr><td class="ps-4 fw-bold text-dark small">${r.kategori}</td><td><span class="badge bg-primary rounded-pill">${r.jumlah}</span></td><td class="text-muted pe-4 small">${r.keterangan}</td></tr>`;
-                labels.push(r.kategori); data.push(r.jumlah);
+                barChartLabels.push(r.kategori); 
+                barChartData.push(r.jumlah);
             });
             $('#info-table-body').html(html || '<tr><td colspan="3" class="text-center py-5">Belum ada data</td></tr>');
-            updateBarChart(labels, data);
+            if ($('#panel-info').hasClass('active')) {
+                updateBarChart(barChartLabels, barChartData);
+            }
         });
 
         // Laporan Table
@@ -681,6 +741,7 @@ $(document).ready(function() {
                         <td class="small text-muted">${r.member || '-'}</td>
                         <td><span class="badge rounded-pill ${r.status === 'Active' ? 'bg-success' : 'bg-warning'} small">${r.status}</span></td>
                         <td class="text-center pe-4">
+                            <button class="btn btn-sm btn-light rounded-circle btn-edit me-1" data-item="${encodeURIComponent(JSON.stringify(r))}" data-id="${r.id}"><i class="fas fa-edit text-primary"></i></button>
                             <button class="btn btn-sm btn-light rounded-circle btn-delete" data-id="${r.id}"><i class="fas fa-trash-alt text-danger"></i></button>
                         </td>
                     </tr>
@@ -735,51 +796,62 @@ $(document).ready(function() {
     // 5. CRUD OPERATIONS
     $('#form-unified').on('submit', function(e) {
         e.preventDefault();
+        const isEdit = !!$('#in-id').val();
+        const id = $('#in-id').val();
         const payload = {
-            nama: $('#in-judul').val(), 
-            judul: $('#in-judul').val(), 
-            kecamatan: $('#in-kec').val(), 
+            nama: $('#in-judul').val(),
+            judul: $('#in-judul').val(),
+            kecamatan: $('#in-kec').val(),
             desa: $('#in-desa').val(),
             sls: $('#in-sls').val(),
             member: $('#in-member').val() ? $('#in-member').val().join(', ') : '',
-            lat: $('#in-lat').val(), 
-            lng: $('#in-lng').val(), 
-            status: 'Active', 
+            lat: $('#in-lat').val(),
+            lng: $('#in-lng').val(),
+            status: $('#in-status').val() || 'Active',
             pic: {!! json_encode(Auth::user()->nama_lengkap) !!},
-            tanggal: new Date().toISOString().split('T')[0], 
+            tanggal: $('#in-tanggal').val(),
             _token: '{{ csrf_token() }}'
         };
         const btn = $('#btn-submit-report');
         btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Menyimpan...');
 
-        $.post('{{ route("tematik.api.store") }}', payload)
-            .done(function() {
-                Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Laporan titik lokasi telah disimpan ke dalam peta.' });
-                $('#form-unified')[0].reset(); 
-                $('#form-loc-card').addClass('d-none');
-                if (formMarker) formMap.removeLayer(formMarker); 
-                formMarker = null;
-                refreshAllData(); 
-                $('[data-bs-target="#panel-sig"]').tab('show');
-            })
-            .fail(function(err) {
-                console.error("Store Error:", err);
-                let msg = 'Gagal menyimpan laporan.';
-                if (err.responseJSON && err.responseJSON.errors) {
-                    msg = Object.values(err.responseJSON.errors).flat().join('<br>');
-                } else if (err.responseJSON && err.responseJSON.message) {
-                    msg = err.responseJSON.message;
-                }
-                Swal.fire({ icon: 'error', title: 'Gagal Simpan', html: `<div class="text-start small">${msg}</div>` });
-            })
-            .always(function() {
-                btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i> SIMPAN LAPORAN KE PETA');
-            });
+        const request = isEdit
+            ? $.ajax({ url: `{{ url('tematik/api/lokasi') }}/${id}`, type: 'PUT', data: payload })
+            : $.post('{{ route("tematik.api.store") }}', payload);
+
+        request.done(function() {
+            Swal.fire({ icon: 'success', title: 'Berhasil', text: isEdit ? 'Laporan berhasil diperbarui.' : 'Laporan titik lokasi telah disimpan ke dalam peta.' });
+            resetFormState();
+            refreshAllData();
+            $('[data-bs-target="#panel-sig"]').tab('show');
+        })
+        .fail(function(err) {
+            console.error("Store/Edit Error:", err);
+            let msg = 'Gagal menyimpan laporan.';
+            if (err.responseJSON && err.responseJSON.errors) {
+                msg = Object.values(err.responseJSON.errors).flat().join('<br>');
+            } else if (err.responseJSON && err.responseJSON.message) {
+                msg = err.responseJSON.message;
+            }
+            Swal.fire({ icon: 'error', title: 'Gagal Simpan', html: `<div class="text-start small">${msg}</div>` });
+        })
+        .always(function() {
+            btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i> SIMPAN LAPORAN KE PETA');
+        });
+    });
+
+    $(document).on('click', '.btn-edit', function() {
+        const item = getDecodedData($(this).attr('data-item'));
+        if (!item) {
+            Swal.fire('Error', 'Data laporan tidak dapat dimuat.', 'error');
+            return;
+        }
+        openEditForm(item);
     });
 
     $(document).on('click', '.btn-delete', function() { 
         $('#confirm-delete').data('id', $(this).data('id')); 
-        new bootstrap.Modal('#deleteModal').show(); 
+        deleteModalInstance.show(); 
     });
 
     $('#confirm-delete').on('click', function() {
@@ -787,7 +859,7 @@ $(document).ready(function() {
         $.ajax({
             url: `{{ url('tematik/api/lokasi') }}/${id}`, type: 'DELETE', data: { _token: '{{ csrf_token() }}' },
             success: function() { 
-                bootstrap.Modal.getInstance('#deleteModal').hide(); 
+                deleteModalInstance.hide(); 
                 refreshAllData(); 
                 Swal.fire('Terhapus', 'Laporan telah dihapus', 'success'); 
             }
@@ -796,8 +868,14 @@ $(document).ready(function() {
 
     // 6. MISC
     $('#btn-recenter').on('click', function() { formMap.setView([-6.89, 112.06], 11); });
-    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function() {
-        mainMap.invalidateSize(); formMap.invalidateSize();
+    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+        mainMap.invalidateSize(); 
+        formMap.invalidateSize();
+        
+        const target = $(e.target).attr('data-bs-target');
+        if (target === '#panel-info') {
+            updateBarChart(barChartLabels, barChartData);
+        }
     });
 
     function findLocationDetails(lat, lng) {
@@ -933,6 +1011,8 @@ $(document).ready(function() {
         }
     });
 
+    $('#deleteModal').appendTo('body');
+    deleteModalInstance = new bootstrap.Modal(document.getElementById('deleteModal'));
     initMaps();
     refreshAllData();
 });

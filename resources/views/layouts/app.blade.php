@@ -109,9 +109,7 @@
                 <a href="{{ route('monitoring.index') }}" class="nav-link">
                     <i class="fas fa-calendar-check me-2"></i> <span>Timeline Agenda</span>
                 </a>
-                <a href="{{ route('tematik.index') }}" class="nav-link {{ Route::is('tematik.*') ? 'active' : '' }}">
-                    <i class="fas fa-map-marked-alt me-2 text-success"></i> <span>Monitoring Tematik</span>
-                </a>
+
             @endif
 
             {{-- SECTION: PENUGASAN --}}
@@ -304,9 +302,17 @@
         <a href="{{ route('kms.admin.index') }}" class="nav-link {{ Route::is('kms.admin.*') ? 'active' : '' }}">
             <i class="fas fa-book-reader me-2 text-success"></i> <span>SEpintu KMS</span>
         </a>
+        <a href="{{ route('tematik.index') }}" class="nav-link {{ Route::is('tematik.*') ? 'active' : '' }}">
+            <i class="fas fa-map-marked-alt me-2 text-success"></i> <span>SEpintu Peta</span>
+        </a>
 
         {{-- SECTION: SYSTEM --}}
         <div class="menu-divider">Sistem</div>
+        @if(Auth::user()->role === 'Admin' || Auth::user()->username === 'ketua.tim')
+            <a href="{{ route('admin.settings.zoom') }}" class="nav-link {{ Route::is('admin.settings.zoom') ? 'active' : '' }}">
+                <i class="fas fa-video me-2 text-primary"></i> <span>Pengaturan Zoom</span>
+            </a>
+        @endif
         <a href="{{ route('panduan.index') }}" class="nav-link">
             <i class="fas fa-book me-2"></i> <span>Panduan Pengguna</span>
         </a>

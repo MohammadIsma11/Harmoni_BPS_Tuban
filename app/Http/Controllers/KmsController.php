@@ -183,4 +183,38 @@ class KmsController extends Controller
 
         return redirect()->back()->with('success', 'Permintaan publikasi ke publik berhasil diajukan.');
     }
+
+    /**
+     * Submit feedback for an article (Helpful/Unhelpful)
+     */
+    public function feedback(Request $request, KnowledgeArticle $article)
+    {
+        $request->validate([
+            'type' => 'required|in:helpful,not_helpful'
+        ]);
+
+        $sessionKey = 'kms_article_feedback_' . $article->id;
+
+        if (session()->has($sessionKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda sudah memberikan masukan untuk artikel ini.'
+            ], 400);
+        }
+
+        if ($request->type === 'helpful') {
+            $article->increment('helpful_count');
+        } else {
+            $article->increment('not_helpful_count');
+        }
+
+        session()->put($sessionKey, $request->type);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Terima kasih atas masukan Anda!',
+            'helpful_count' => $article->helpful_count,
+            'not_helpful_count' => $article->not_helpful_count
+        ]);
+    }
 }

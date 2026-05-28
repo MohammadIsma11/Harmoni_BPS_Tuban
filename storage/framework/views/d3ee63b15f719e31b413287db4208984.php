@@ -91,40 +91,84 @@
         </div>
     </footer>
 
-    <!-- Floating WA Trigger -->
-    <button type="button" class="floating-wa shadow-lg border-0" data-bs-toggle="modal" data-bs-target="#waModal">
-        <i class="fab fa-whatsapp me-2"></i> Chat WA Cepat
+    <!-- Floating Consultation Trigger -->
+    <button type="button" class="floating-wa shadow-lg border-0" data-bs-toggle="modal" data-bs-target="#consultationModal">
+        <i class="fas fa-headset me-2"></i> Konsultasi Cepat
     </button>
 
-    <!-- WA Modal -->
-    <div class="modal fade" id="waModal" tabindex="-1" aria-hidden="true">
+    <!-- Consultation Modal -->
+    <div class="modal fade" id="consultationModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-                <div class="modal-header bg-success text-white p-4">
-                    <h5 class="modal-title fw-bold"><i class="fab fa-whatsapp me-2"></i> Konsultasi Cepat</h5>
+                <div id="consultation-header" class="modal-header bg-success text-white p-4">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-headset me-2"></i> Layanan Konsultasi</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4 p-md-5">
-                    <p class="text-muted mb-4 small fw-bold text-uppercase tracking-widest">Pilih kategori bantuan agar kami dapat membantu Anda lebih cepat.</p>
+                    <p class="text-muted mb-4 small fw-bold text-uppercase tracking-widest" style="letter-spacing: 1px;">Silakan pilih media konsultasi yang Anda inginkan.</p>
                     
+                    <!-- Media Selector -->
+                    <div class="mb-4">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="consultation_method" id="method-wa" value="wa" checked>
+                                <label class="btn btn-outline-success w-100 py-3 rounded-4 fw-bold d-flex align-items-center justify-content-center" for="method-wa">
+                                    <i class="fab fa-whatsapp me-2 fs-5"></i> WhatsApp
+                                </label>
+                            </div>
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="consultation_method" id="method-zoom" value="zoom">
+                                <label class="btn btn-outline-primary w-100 py-3 rounded-4 fw-bold d-flex align-items-center justify-content-center" for="method-zoom">
+                                    <i class="fas fa-video me-2 fs-5"></i> Zoom Meeting
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Nama -->
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Nama Anda</label>
-                        <input type="text" id="wa_name_global" class="form-control rounded-4 p-3 bg-light border-0" placeholder="Masukkan nama...">
+                        <input type="text" id="consultation_name" class="form-control rounded-4 p-3 bg-light border-0" placeholder="Masukkan nama Anda...">
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label small fw-bold">Kategori Bantuan</label>
-                        <select id="wa_category_global" class="form-select rounded-4 p-3 bg-light border-0">
-                            <option value="" disabled selected>Pilih Kategori</option>
-                            <option value="Rekrutmen SE">Rekrutmen SE</option>
-                            <option value="Lapangan SE">Lapangan SE</option>
-                            <option value="Aplikasi FASIH">Aplikasi FASIH</option>
-                            <option value="Lainnya">Lainnya</option>
-                        </select>
+                    <!-- WhatsApp Specific Inputs -->
+                    <div id="wa-inputs-section">
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Kategori Bantuan</label>
+                            <select id="wa_category" class="form-select rounded-4 p-3 bg-light border-0">
+                                <option value="" disabled selected>Pilih Kategori</option>
+                                <option value="Rekrutmen SE">Rekrutmen SE</option>
+                                <option value="Lapangan SE">Lapangan SE</option>
+                                <option value="Aplikasi FASIH">Aplikasi FASIH</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <button type="button" onclick="startGlobalWaChat()" class="btn btn-success w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm">
-                        Mulai Chat Sekarang
+                    <!-- Zoom Specific Card (Initially hidden) -->
+                    <div id="zoom-details-section" class="d-none">
+                        <div class="card bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-4 p-4 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary text-white rounded-circle p-2 d-inline-block me-3">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-primary">Virtual Room BPS Tuban</h6>
+                                    <small class="text-muted">Konsultasi Tatap Muka Online</small>
+                                </div>
+                            </div>
+                            <hr class="my-2 opacity-25">
+                            <p class="small mb-2 fw-medium text-dark">
+                                Yuk, mulai konsultasi tatap muka secara online dengan menekan tombol di bawah! Anda akan terhubung secara instan, aman, dan langsung dengan petugas layanan BPS Kabupaten Tuban.
+                            </p>
+                            <p class="text-muted small mb-0" style="font-size: 0.75rem;">
+                                <i class="fas fa-info-circle me-1"></i> Pastikan aplikasi Zoom sudah terinstal di perangkat Anda untuk kenyamanan konsultasi terbaik.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btn-submit-consultation" onclick="startConsultation()" class="btn btn-success w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm">
+                        Mulai Chat WA
                     </button>
                 </div>
             </div>
@@ -136,7 +180,7 @@
             position: fixed;
             bottom: 30px;
             right: 30px;
-            background: #25d366;
+            background: linear-gradient(135deg, #0058a8 0%, #00aaff 100%);
             color: white;
             padding: 15px 25px;
             border-radius: 50px;
@@ -146,11 +190,12 @@
             display: flex;
             align-items: center;
             transition: all 0.3s;
+            box-shadow: 0 10px 25px rgba(0, 88, 168, 0.2);
         }
         .floating-wa:hover {
-            background: #128c7e;
-            color: white;
             transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 88, 168, 0.35);
+            color: white;
         }
         .modal-content {
             backdrop-filter: blur(10px);
@@ -161,21 +206,61 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function startGlobalWaChat() {
-            const name = document.getElementById('wa_name_global').value || 'User';
-            const category = document.getElementById('wa_category_global').value;
-            
-            if (!category) {
-                alert('Silakan pilih kategori terlebih dahulu.');
-                return;
+        // Switch between WA and Zoom in Landing page
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.name === 'consultation_method') {
+                const method = e.target.value;
+                const waInputs = document.getElementById('wa-inputs-section');
+                const zoomDetails = document.getElementById('zoom-details-section');
+                const header = document.getElementById('consultation-header');
+                const submitBtn = document.getElementById('btn-submit-consultation');
+                
+                if (method === 'zoom') {
+                    waInputs.classList.add('d-none');
+                    zoomDetails.classList.remove('d-none');
+                    header.classList.remove('bg-success');
+                    header.classList.add('bg-primary');
+                    submitBtn.classList.remove('btn-success');
+                    submitBtn.classList.add('btn-primary');
+                    submitBtn.textContent = 'Gabung Zoom Meeting';
+                } else {
+                    waInputs.classList.remove('d-none');
+                    zoomDetails.classList.add('d-none');
+                    header.classList.remove('bg-primary');
+                    header.classList.add('bg-success');
+                    submitBtn.classList.remove('btn-primary');
+                    submitBtn.classList.add('btn-success');
+                    submitBtn.textContent = 'Mulai Chat WA';
+                }
             }
+        });
 
-            const text = `Halo Call Center BPS Tuban, saya ${name} ingin berkonsultasi mengenai *${category}*.`;
-            const encodedText = encodeURIComponent(text);
-            window.open(`https://wa.me/6285755461223?text=${encodedText}`, '_blank');
-            
-            const modal = bootstrap.Modal.getInstance(document.getElementById('waModal'));
-            modal.hide();
+        function startConsultation() {
+            const name = document.getElementById('consultation_name').value || 'User';
+            const method = document.querySelector('input[name="consultation_method"]:checked').value;
+
+            if (method === 'zoom') {
+                const zoomLink = '<?php echo e(\App\Models\Setting::getValue('zoom_link', 'https://zoom.us/j/85755461223?pwd=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')); ?>';
+                window.open(zoomLink, '_blank');
+                
+                const modalEl = document.getElementById('consultationModal');
+                const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.hide();
+            } else {
+                const category = document.getElementById('wa_category').value;
+                if (!category) {
+                    alert('Silakan pilih kategori terlebih dahulu.');
+                    return;
+                }
+
+                const text = `Halo Call Center BPS Tuban, saya ${name} ingin berkonsultasi mengenai *${category}*.`;
+                const encodedText = encodeURIComponent(text);
+                window.open(`https://wa.me/6285755461223?text=${encodedText}`, '_blank');
+                
+                const modalEl = document.getElementById('consultationModal');
+                const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.hide();
+            }
         }
     </script>
     <?php echo $__env->yieldContent('scripts'); ?>

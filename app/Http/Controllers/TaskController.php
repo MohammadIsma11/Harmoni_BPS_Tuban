@@ -94,6 +94,9 @@ class TaskController extends Controller
         'solusi_antisipasi' => ['required', 'string'],
         'fotos' => ['required', 'array', 'min:1', 'max:6'],
         'fotos.*' => ['image', 'mimes:jpeg,png,jpg', 'max:10240'],
+        'lat' => ['required', 'numeric'],
+        'lng' => ['required', 'numeric'],
+        'sls' => ['nullable', 'string', 'max:200'],
     ]);
 
     try {
@@ -150,13 +153,40 @@ class TaskController extends Controller
             'solusi_antisipasi' => $request->solusi_antisipasi
         ];
 
-        \App\Models\AssignmentReport::create([
+        $newReport = \App\Models\AssignmentReport::create([
             'agenda_id'         => $agenda->id,
             'user_id'           => $userId,
             'lokasi_tujuan'     => $lokasiLengkap,
             'tanggal_lapor'     => $tglPilihan,
             'isi_laporan'       => json_encode($reportData),
-            'status_verifikasi' => 'Verified'
+            'status_verifikasi' => 'Verified',
+            'lat'               => $request->lat,
+            'lng'               => $request->lng,
+            'sls'               => $request->sls,
+        ]);
+
+        // Hubungkan/buat titik lokasi di Sepintu Peta (Tematik)
+        $memberNames = \App\Models\User::whereIn('id', 
+            \App\Models\Agenda::where('title', $agenda->title)
+                ->where('event_date', $agenda->event_date)
+                ->where('nomor_surat_tugas', $agenda->nomor_surat_tugas)
+                ->pluck('assigned_to')
+        )->pluck('nama_lengkap')->toArray();
+        $memberStr = implode(', ', $memberNames);
+
+        \App\Models\Tematik::create([
+            'nama'                 => $agenda->title,
+            'pic'                  => auth()->user()->nama_lengkap,
+            'member'               => $memberStr,
+            'kecamatan'            => $request->kecamatan,
+            'desa'                 => $request->desa,
+            'sls'                  => $request->sls,
+            'judul'                => $agenda->title,
+            'tanggal'              => $tglPilihan,
+            'status'               => 'Active',
+            'lat'                  => $request->lat,
+            'lng'                  => $request->lng,
+            'assignment_report_id' => $newReport->id
         ]);
 
         // 4. Update Data Agenda (Snapshot Laporan Terakhir)
