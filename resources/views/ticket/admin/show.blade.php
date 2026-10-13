@@ -331,6 +331,7 @@
         box-shadow: 0 0 0 1px #e2e8f0;
     }
 </style>
+@push('modals')
 {{-- Modal Duplicate Check --}}
 <div class="modal fade" id="modalDuplicateKms" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -358,6 +359,7 @@
         </div>
     </div>
 </div>
+@endpush
 
 @push('scripts')
 <script>

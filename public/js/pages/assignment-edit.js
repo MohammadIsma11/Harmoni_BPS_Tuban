@@ -10,6 +10,8 @@ function sinkronisasiForm() {
     // --- LOGIKA BERDASARKAN JENIS KEGIATAN ---
     if (val == '1') { 
         // === TUGAS LAPANGAN (SPT) ===
+        $('#kategori-lapangan-container').show();
+        $('#kategori').prop('disabled', false);
         $('#spt-fields').show();      // Show: Menimbang, Mengingat
         $('#memo-fields').hide();     // Hide: Yth, Hal, Lokasi
         $('#rapat-fields').hide();    // Hide: Notulis
@@ -30,6 +32,8 @@ function sinkronisasiForm() {
     } 
     else { 
         // === RAPAT (2) ATAU DINAS LUAR (3) (MEMORANDUM) ===
+        $('#kategori-lapangan-container').hide();
+        $('#kategori').prop('disabled', true);
         $('#spt-fields').hide();      // Hide: Menimbang, Mengingat
         $('#memo-fields').show();     // Show: Yth, Hal, Lokasi
         $('#print-mode-container').hide();

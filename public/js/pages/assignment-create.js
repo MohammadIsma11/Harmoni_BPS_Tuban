@@ -21,12 +21,16 @@ window.handleActivityTypeChange = function() {
     $('#nomor_surat_tugas, #end_date, #start_time, #notulis-select, #surat_tugas, #location, #content_surat, #report_target').prop('required', false);
 
     if (val == '1') { // Tugas Lapangan
+        $('#kategori-lapangan-container').show();
+        $('#kategori').prop('disabled', false);
         $('#spt-fields').show(); $('#memo-fields').hide(); $('#rapat-fields').hide(); 
         $('#print-mode-container').show(); $('#end-date-container').show(); $('#time-field').hide();
         $('#label-event-date').html('Tanggal Mulai' + star);
         $('#label-content-surat').html('Isi Perintah Tugas' + star);
         $('#nomor_surat_tugas, #event_date, #end_date, #content_surat, #report_target').prop('required', true);
     } else { // Rapat / DL
+        $('#kategori-lapangan-container').hide();
+        $('#kategori').prop('disabled', true);
         $('#spt-fields').hide(); $('#memo-fields').show(); $('#print-mode-container').hide(); $('#time-field').show();
         $('#label-event-date').html('Tanggal Pelaksanaan' + star);
         $('#nomor_surat_tugas, #event_date, #start_time, #location, #content_surat').prop('required', true);

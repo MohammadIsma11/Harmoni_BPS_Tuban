@@ -3,16 +3,6 @@
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/pages/absensi-index.css') }}">
 
-{{-- Small config script for external JS --}}
-<script>
-    window.absensiRoutes = {
-        store: "{{ route('absensi.store') }}",
-        update: "{{ route('absensi.update', ':id') }}",
-        destroy: "{{ route('absensi.destroy', ':id') }}"
-    };
-</script>
-<script src="{{ asset('js/pages/absensi-index.js') }}"></script>
-
 <div class="container-fluid px-4 pb-5">
     {{-- Header --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3 mt-3">
@@ -98,8 +88,8 @@
                                     <div class="leave-bar status-{{ $cleanStatus }} btn-edit-absensi" 
                                          data-id="{{ $statusDate->id }}"
                                          data-user-id="{{ $user->id }}"
-                                         data-start="{{ $statusDate->start_date }}"
-                                         data-end="{{ $statusDate->end_date }}"
+                                         data-start="{{ \Carbon\Carbon::parse($statusDate->start_date)->format('Y-m-d') }}"
+                                         data-end="{{ \Carbon\Carbon::parse($statusDate->end_date)->format('Y-m-d') }}"
                                          data-status="{{ $statusDate->status }}"
                                          data-ket="{{ $statusDate->keterangan }}"
                                          data-bs-toggle="tooltip"
@@ -117,6 +107,7 @@
     </div>
 </div>
 
+@push('modals')
 {{-- MODAL IMPORT --}}
 <div class="modal fade" id="modalImportCSV" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -137,8 +128,9 @@
                         <input type="file" name="file_import" class="form-control rounded-3" accept=".csv, .xlsx, .xls" required>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="submit" class="btn btn-success rounded-pill px-4 w-100 fw-bold shadow">
+                <div class="modal-footer border-0 pt-0 d-flex gap-2">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold border" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold shadow flex-grow-1">
                         <i class="fas fa-sync me-2"></i>Mulai Sinkronisasi
                     </button>
                 </div>
@@ -198,6 +190,9 @@
                     <button type="button" id="btnDeleteAbsensi" class="btn btn-link text-danger text-decoration-none fw-bold w-100 d-none">
                         <i class="fas fa-trash-alt me-1"></i> Hapus Data Ini
                     </button>
+                    <button type="button" class="btn btn-light rounded-pill px-4 w-100 fw-bold text-muted border" data-bs-dismiss="modal">
+                        Batal
+                    </button>
                 </div>
             </form>
             <form id="formDelete" action="" method="POST" class="d-none">
@@ -207,6 +202,16 @@
         </div>
     </div>
 </div>
+@endpush
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@push('scripts')
+<script>
+    window.absensiRoutes = {
+        store: "{{ route('absensi.store') }}",
+        update: "{{ route('absensi.update', ':id') }}",
+        destroy: "{{ route('absensi.destroy', ':id') }}"
+    };
+</script>
+<script src="{{ asset('js/pages/absensi-index.js') }}"></script>
+@endpush
 @endsection

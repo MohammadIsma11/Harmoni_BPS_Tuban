@@ -410,6 +410,7 @@
             </div>
             @endif
             @endif
+        </div>
     </nav>
 
     <div class="content-padding animate-fade-in">

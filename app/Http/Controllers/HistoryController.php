@@ -173,6 +173,7 @@ class HistoryController extends Controller
                 'desa'                 => $request->desa,
                 'sls'                  => $request->sls,
                 'judul'                => $agenda->title,
+                'kategori'             => $agenda->kategori ?? 'Survei',
                 'tanggal'              => $request->tanggal_pelaksanaan,
                 'status'               => 'Active',
                 'lat'                  => $request->lat,

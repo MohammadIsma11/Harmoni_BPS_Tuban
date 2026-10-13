@@ -50,12 +50,19 @@
                             {{-- Role --}}
                             <div class="col-md-6 mb-3">
                                 <label class="form-label small fw-bold text-muted">ROLE / JABATAN *</label>
-                                <select name="role" class="form-select rounded-3 bg-light border-0 @error('role') is-invalid @enderror" required>
-                                    <option value="Admin" {{ old('role', $user->role) == 'Admin' ? 'selected' : '' }}>Admin (Tim IT)</option>
-                                    <option value="Kepala" {{ old('role', $user->role) == 'Kepala' ? 'selected' : '' }}>Kepala</option>
-                                    <option value="Katim" {{ old('role', $user->role) == 'Katim' ? 'selected' : '' }}>Ketua Tim (Katim)</option>
-                                    <option value="Pegawai" {{ old('role', $user->role) == 'Pegawai' ? 'selected' : '' }}>Anggota / Pegawai</option>
-                                </select>
+                                @if($user->id === Auth::id())
+                                    <select class="form-select rounded-3 bg-light border-0" disabled>
+                                        <option value="Admin" selected>Admin (Tim IT) - Akun Sendiri</option>
+                                    </select>
+                                    <input type="hidden" name="role" value="Admin">
+                                @else
+                                    <select name="role" class="form-select rounded-3 bg-light border-0 @error('role') is-invalid @enderror" required>
+                                        <option value="Admin" {{ old('role', $user->role) == 'Admin' ? 'selected' : '' }}>Admin (Tim IT)</option>
+                                        <option value="Kepala" {{ old('role', $user->role) == 'Kepala' ? 'selected' : '' }}>Kepala</option>
+                                        <option value="Katim" {{ old('role', $user->role) == 'Katim' ? 'selected' : '' }}>Ketua Tim (Katim)</option>
+                                        <option value="Pegawai" {{ old('role', $user->role) == 'Pegawai' ? 'selected' : '' }}>Anggota / Pegawai</option>
+                                    </select>
+                                @endif
                                 @error('role') <div class="invalid-feedback fw-bold">{{ $message }}</div> @enderror
                             </div>
 

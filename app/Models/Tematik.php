@@ -17,6 +17,7 @@ class Tematik extends Model
         'desa',
         'sls',
         'judul',
+        'kategori',
         'tanggal',
         'status',
         'lat',

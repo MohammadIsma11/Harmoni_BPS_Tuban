@@ -52,7 +52,15 @@
                         <option value="3">Dinas Luar</option>
                     </select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 mb-3" id="kategori-lapangan-container">
+                    <label class="small fw-bold mb-2">Kategori Lapangan<span class="required-star">*</span></label>
+                    <select name="kategori" id="kategori" class="form-select border-primary border-opacity-25 shadow-sm">
+                        <option value="Survei" {{ old('kategori') == 'Survei' ? 'selected' : '' }}>Survei</option>
+                        <option value="Sensus" {{ old('kategori') == 'Sensus' ? 'selected' : '' }}>Sensus</option>
+                    </select>
+                    <small class="text-muted" style="font-size: 0.7rem;">Pilih jenis penugasan antara Survei atau Sensus.</small>
+                </div>
+                <div class="col-md-12">
                     <label class="small fw-bold mb-2">Nama Kegiatan<span class="required-star">*</span></label>
                     <input type="text" name="title" class="form-control" placeholder="Input nama kegiatan..." required>
                 </div>
@@ -291,10 +299,14 @@
         $('#nomor_surat_tugas, #end_date, #start_time, #notulis-select, #surat_tugas, #location, #content_surat, #report_target').prop('required', false);
 
         if (val == '1') { 
+            $('#kategori-lapangan-container').show();
+            $('#kategori').prop('disabled', false);
             $('#spt-fields').show(); $('#memo-fields').hide(); $('#rapat-fields').hide(); $('#print-mode-container').show(); $('#end-date-container').show(); $('#time-field').hide();
             $('#label-event-date').html('Tanggal Mulai' + star); $('#label-content-surat').html('Isi Perintah Tugas' + star);
             $('#nomor_surat_tugas, #event_date, #end_date, #content_surat, #report_target').prop('required', true);
         } else {
+            $('#kategori-lapangan-container').hide();
+            $('#kategori').prop('disabled', true);
             $('#spt-fields').hide(); $('#memo-fields').show(); $('#print-mode-container').hide(); $('#time-field').show();
             $('#label-event-date').html('Tanggal Pelaksanaan' + star); $('#nomor_surat_tugas, #event_date, #start_time, #location, #content_surat').prop('required', true);
             if (val == '2') { $('#rapat-fields').show(); $('#end-date-container').hide(); $('#notulis-select').prop('required', true); }

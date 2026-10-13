@@ -46,6 +46,7 @@ class TematikController extends Controller
     {
         $validated = $request->validate([
             'nama' => 'required|string|max:150',
+            'kategori' => 'nullable|in:Survei,Sensus',
             'kecamatan' => 'nullable|string|max:100',
             'desa' => 'nullable|string|max:100',
             'sls' => 'nullable|string|max:200',
@@ -58,6 +59,8 @@ class TematikController extends Controller
             'tanggal' => 'required|date',
         ]);
 
+        $validated['kategori'] = $request->kategori ?? 'Survei';
+
         $tematik = Tematik::create($validated);
         return response()->json($tematik, 201);
     }
@@ -68,6 +71,7 @@ class TematikController extends Controller
         
         $validated = $request->validate([
             'nama' => 'required|string|max:150',
+            'kategori' => 'nullable|in:Survei,Sensus',
             'judul' => 'required|string|max:200',
             'member' => 'nullable|string',
             'status' => 'required|string|max:50',
@@ -78,6 +82,10 @@ class TematikController extends Controller
             'sls' => 'nullable|string|max:200',
             'tanggal' => 'required|date',
         ]);
+
+        if ($request->has('kategori') && !empty($request->kategori)) {
+            $validated['kategori'] = $request->kategori;
+        }
 
         $tematik->update($validated);
         return response()->json($tematik);

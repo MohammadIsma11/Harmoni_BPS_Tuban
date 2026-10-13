@@ -78,6 +78,63 @@ function initCoreLayout() {
     syncSidebar();
 }
 
+/**
+ * Universal Modal Sanitization & Anti-Freeze Handler
+ * Prevents modals from being trapped in child CSS stacking contexts
+ * and cleans up any orphaned/duplicate backdrops that cause grey screens.
+ */
+function cleanupModalBackdrops() {
+    const hasVisibleModal = document.querySelectorAll('.modal.show').length > 0;
+    if (!hasVisibleModal) {
+        document.querySelectorAll('.modal-backdrop').forEach(function(el) {
+            el.remove();
+        });
+        document.body.classList.remove('modal-open');
+        document.documentElement.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }
+}
+
+function relocateModalsToBody() {
+    document.querySelectorAll('.modal').forEach(function(modalEl) {
+        if (modalEl.parentElement !== document.body) {
+            document.body.appendChild(modalEl);
+        }
+    });
+}
+
 $(document).ready(function() {
     initCoreLayout();
+    relocateModalsToBody();
+    cleanupModalBackdrops();
+
+    // Remove transform from .animate-fade-in on animationend to prevent any stacking context issues
+    const animatedContent = document.querySelector('.content-padding.animate-fade-in');
+    if (animatedContent) {
+        animatedContent.addEventListener('animationend', function() {
+            this.style.transform = 'none';
+        });
+    }
+
+    // Global listeners for any Bootstrap modals in the app
+    $(document).on('show.bs.modal', '.modal', function() {
+        if (this.parentElement !== document.body) {
+            document.body.appendChild(this);
+        }
+    });
+
+    $(document).on('hidden.bs.modal hide.bs.modal', '.modal', function() {
+        setTimeout(cleanupModalBackdrops, 150);
+        setTimeout(cleanupModalBackdrops, 350);
+    });
+
+    // Safeguard on Escape key
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            setTimeout(cleanupModalBackdrops, 200);
+        }
+    });
 });
+
+

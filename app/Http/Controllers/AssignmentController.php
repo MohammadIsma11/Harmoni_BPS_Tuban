@@ -88,6 +88,7 @@ public function assignmentStore(Request $request)
         'report_target'     => 'required|integer|min:1',
         'mode_surat'        => 'required|in:generate,upload',
         'print_mode'        => 'nullable|in:perorang,kolektif',
+        'kategori'          => 'nullable|in:Survei,Sensus',
         'menimbang'         => 'nullable|string',
         'mengingat'         => 'nullable|string',
         'location'          => 'nullable|string|max:255', // Tambahkan ke validasi
@@ -133,6 +134,7 @@ public function assignmentStore(Request $request)
                     'team_id'           => $request->team_id,
                     'assigned_to'       => $pegawai_id,
                     'activity_type_id'  => $type,
+                    'kategori'          => ($type == 1) ? ($request->kategori ?? 'Survei') : null,
                     'title'             => $request->title,
                     'description'       => $request->description,
                     'nomor_surat_tugas' => $request->nomor_surat_tugas ?? '-',
@@ -231,6 +233,7 @@ public function assignmentUpdate(Request $request, $id)
 
     if ($type == 1 || $type == 3) $rules['end_date'] = 'required|date|after_or_equal:event_date';
     if ($type == 2) $rules['notulis_id'] = 'required';
+    $rules['kategori'] = 'nullable|in:Survei,Sensus';
 
     $request->validate($rules);
 
@@ -254,8 +257,10 @@ public function assignmentUpdate(Request $request, $id)
             foreach ($request->assigned_to as $pegawai_id) {
                 $newAgenda = Agenda::create([
                     'user_id'           => auth()->id(),
+                    'team_id'           => $request->team_id ?? $assignment->team_id,
                     'assigned_to'       => $pegawai_id,
                     'activity_type_id'  => $type,
+                    'kategori'          => ($type == 1) ? ($request->kategori ?? 'Survei') : null,
                     'title'             => $request->title,
                     'description'       => $request->description,
                     'nomor_surat_tugas' => $request->nomor_surat_tugas ?? '-',

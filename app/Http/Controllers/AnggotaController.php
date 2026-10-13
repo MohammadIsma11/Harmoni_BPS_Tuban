@@ -68,6 +68,11 @@ class AnggotaController extends Controller
     {
         $user = User::findOrFail($id);
         
+        // Mencegah Admin mengubah role-nya sendiri ke non-Admin (lockout protection)
+        if ($user->id === auth()->id() && $request->role !== 'Admin') {
+            return back()->with('error', 'Anda tidak dapat mengubah Role/Jabatan Anda sendiri dari Admin ke role lain untuk menghindari lockout.');
+        }
+        
         $request->validate([
             'nama_lengkap' => 'required|string|max:255',
             'username'     => 'required|string|max:50|unique:users,username,' . $user->id,

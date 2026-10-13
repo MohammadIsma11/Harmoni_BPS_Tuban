@@ -123,9 +123,13 @@ function handleWaQuickChat() {
 
     // Jika form masih kosong (Nama atau Kategori belum diisi), munculkan modal pilihan seperti di landing page
     if (!name || !categorySelect.value) {
-        const waModalElement = document.getElementById('waModal');
-        const waModal = new bootstrap.Modal(waModalElement);
-        waModal.show();
+        const waModalElement = document.getElementById('consultationModal') || document.getElementById('waModal');
+        if (waModalElement) {
+            const waModal = bootstrap.Modal.getOrCreateInstance(waModalElement);
+            waModal.show();
+        } else {
+            window.open('https://wa.me/6285755461223?text=' + encodeURIComponent('Halo Call Center BPS Tuban, saya butuh bantuan.'), '_blank');
+        }
     } else {
         // Jika sudah diisi, langsung buat template lengkap
         const text = `Halo Call Center BPS Tuban, saya ${name} ingin melaporkan kendala terkait *${category}*.\n\n*Subjek:* ${subject || '-'}\n*Deskripsi:* ${description || '-'}`;

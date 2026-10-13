@@ -33,12 +33,20 @@
                                 <select name="activity_type_id" id="activity_type_id" class="form-select border-primary border-opacity-25" required>
                                     @foreach($types as $type)
                                         <option value="{{ $type->id }}" {{ (int)old('activity_type_id', $assignment->activity_type_id) === (int)$type->id ? 'selected' : '' }}>
-                                            {{ $type->name }}
+                                             {{ $type->name }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 mb-3" id="kategori-lapangan-container" style="{{ $assignment->activity_type_id == 1 ? '' : 'display: none;' }}">
+                                <label class="small fw-bold mb-2">Kategori Lapangan<span class="required-star">*</span></label>
+                                <select name="kategori" id="kategori" class="form-select border-primary border-opacity-25 shadow-sm" {{ $assignment->activity_type_id == 1 ? '' : 'disabled' }}>
+                                    <option value="Survei" {{ old('kategori', $assignment->kategori ?? 'Survei') == 'Survei' ? 'selected' : '' }}>Survei</option>
+                                    <option value="Sensus" {{ old('kategori', $assignment->kategori) == 'Sensus' ? 'selected' : '' }}>Sensus</option>
+                                </select>
+                                <small class="text-muted" style="font-size: 0.7rem;">Pilih jenis penugasan antara Survei atau Sensus.</small>
+                            </div>
+                            <div class="col-md-12">
                                 <label class="small fw-bold mb-2">Nama Kegiatan<span class="required-star">*</span></label>
                                 <input type="text" name="title" class="form-control" value="{{ old('title', $assignment->title) }}" required>
                             </div>

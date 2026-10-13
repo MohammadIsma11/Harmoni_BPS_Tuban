@@ -57,6 +57,21 @@
                             </div>
                             
                             <div id="main-map" style="height: 100%; width: 100%;"></div>
+
+                            {{-- MAP LEGEND OVERLAY --}}
+                            <div class="position-absolute bottom-0 start-0 m-3 p-2 px-3 bg-white bg-opacity-95 backdrop-blur rounded-3 shadow-sm border" style="z-index: 1000;">
+                                <div class="fw-bold mb-1 text-dark" style="font-size: 0.75rem;"><i class="fas fa-layer-group me-1 text-primary"></i> Kategori Tugas</div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="d-flex align-items-center">
+                                        <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: #0058a8;"></span>
+                                        <span class="text-dark fw-bold" style="font-size: 0.75rem;">Survei</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: #ea580c;"></span>
+                                        <span class="text-dark fw-bold" style="font-size: 0.75rem;">Sensus</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -66,7 +81,10 @@
                             <div class="card-body p-4">
                                 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
                                     <h6 class="fw-bold mb-0">Detail Titik Lokasi</h6>
-                                    <span id="badge-status" class="badge rounded-pill bg-light text-muted">No Selection</span>
+                                    <div class="d-flex gap-1 align-items-center">
+                                        <span id="badge-kategori" class="badge rounded-pill bg-light text-muted">Kategori</span>
+                                        <span id="badge-status" class="badge rounded-pill bg-light text-muted">No Selection</span>
+                                    </div>
                                 </div>
                                 <div id="detail-placeholder" class="text-center py-5 text-muted">
                                     <i class="fas fa-map-marker-alt fa-3x mb-3 opacity-25"></i>
@@ -80,8 +98,16 @@
                                             <span id="txt-date" class="fw-bold small">-</span>
                                         </div>
                                         <div class="col-6">
+                                            <small class="text-muted d-block mb-1">Kategori</small>
+                                            <span id="txt-kategori" class="fw-bold small">-</span>
+                                        </div>
+                                        <div class="col-6">
                                             <small class="text-muted d-block mb-1">Kecamatan</small>
                                             <span id="txt-kec" class="fw-bold small">-</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block mb-1">Desa/Kelurahan</small>
+                                            <span id="txt-desa" class="fw-bold small">-</span>
                                         </div>
                                         <div class="col-6">
                                             <small class="text-muted d-block mb-1">Pelapor</small>
@@ -90,10 +116,6 @@
                                         <div class="col-6">
                                             <small class="text-muted d-block mb-1">Status</small>
                                             <span id="txt-status-val" class="fw-bold small">-</span>
-                                        </div>
-                                        <div class="col-6">
-                                            <small class="text-muted d-block mb-1">Desa/Kelurahan</small>
-                                            <span id="txt-desa" class="fw-bold small">-</span>
                                         </div>
                                         <div class="col-12">
                                             <small class="text-muted d-block mb-1">Satuan Lingkungan Setempat (RT/RW)</small>
@@ -184,6 +206,7 @@
                                 <thead class="bg-light text-muted small text-uppercase">
                                     <tr>
                                         <th class="ps-4">Tanggal</th>
+                                        <th>Kategori</th>
                                         <th>Kecamatan</th>
                                         <th>Pelapor</th>
                                         <th>Kegiatan</th>
@@ -261,20 +284,30 @@
 
                                             <div class="mb-4">
                                                 <label class="fw-bold small text-muted mb-2 text-uppercase">2. Detail Kegiatan</label>
-                                                <div class="form-group mb-3">
-                                                    <label class="small text-muted mb-1 ps-1">Tanggal Kegiatan</label>
-                                                    <input type="date" id="in-tanggal" class="form-control rounded-3 py-2 px-3 mb-2" value="{{ date('Y-m-d') }}" required>
+                                                <div class="row g-3 mb-3">
+                                                    <div class="col-md-6">
+                                                        <label class="small text-muted mb-1 ps-1 fw-bold">Kategori Kegiatan <span class="text-danger">*</span></label>
+                                                        <select id="in-kategori" class="form-select rounded-3 py-2 px-3 border-primary border-opacity-25" required>
+                                                            <option value="Survei" selected>Survei</option>
+                                                            <option value="Sensus">Sensus</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="small text-muted mb-1 ps-1 fw-bold">Tanggal Kegiatan <span class="text-danger">*</span></label>
+                                                        <input type="date" id="in-tanggal" class="form-control rounded-3 py-2 px-3" value="{{ date('Y-m-d') }}" required>
+                                                    </div>
                                                 </div>
                                                 <div class="form-group mb-3">
-                                                    <input type="text" id="in-judul" class="form-control rounded-3 py-2 px-3" placeholder="Judul Kegiatan (Contoh: Audit Produksi Batik)" required>
+                                                    <label class="small text-muted mb-1 ps-1 fw-bold">Judul Kegiatan <span class="text-danger">*</span></label>
+                                                    <input type="text" id="in-judul" class="form-control rounded-3 py-2 px-3" placeholder="Judul Kegiatan (Contoh: Sensus Pertanian 2023 / Survei Ubinan)" required>
                                                 </div>
                                                 <div class="form-group mb-3">
                                                     <label class="small text-muted mb-1 ps-1">Anggota Tim / Member (Bisa pilih lebih dari satu)</label>
                                                     <select id="in-member" class="form-control" multiple="multiple" style="width: 100%"></select>
                                                 </div>
                                                 <div class="form-group mb-3">
+                                                    <label class="small text-muted mb-1 ps-1">Pelapor Otomatis</label>
                                                     <input type="text" class="form-control rounded-3 py-2 px-3 bg-light" value="{{ Auth::user()->nama_lengkap }}" readonly>
-                                                    <small class="text-muted ps-2">Pelapor Otomatis</small>
                                                 </div>
                                             </div>
 
@@ -298,7 +331,9 @@
         </div>
     </div>
 </div>
+@endsection
 
+@push('modals')
 {{-- MODALS & TOASTS --}}
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog modal-sm modal-dialog-centered">
@@ -317,6 +352,7 @@
         </div>
     </div>
 </div>
+@endpush
 
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -368,6 +404,58 @@
     .suggestion-item:hover { background-color: #f1f5f9; cursor: pointer; }
     
     .table thead th { font-weight: 700; border-bottom: 2px solid #f1f5f9; }
+
+    /* Custom Pin Marker (Survei vs Sensus) */
+    .custom-map-pin {
+        background: transparent !important;
+        border: none !important;
+    }
+    .pin-wrapper {
+        position: relative;
+        width: 32px;
+        height: 38px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .pin-wrapper:hover {
+        transform: translateY(-5px) scale(1.18);
+        z-index: 9999 !important;
+    }
+    .pin-marker {
+        width: 30px;
+        height: 30px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #ffffff;
+    }
+    .pin-marker i {
+        transform: rotate(45deg);
+        font-size: 13px;
+        color: #ffffff;
+    }
+    .pin-marker.survei {
+        background: linear-gradient(135deg, #2563eb, #0058a8);
+        box-shadow: 0 4px 10px rgba(0, 88, 168, 0.5);
+    }
+    .pin-marker.sensus {
+        background: linear-gradient(135deg, #f97316, #ea580c);
+        box-shadow: 0 4px 10px rgba(234, 88, 12, 0.5);
+    }
+    .pin-shadow {
+        position: absolute;
+        bottom: 0;
+        width: 12px;
+        height: 4px;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 50%;
+        filter: blur(1px);
+    }
 </style>
 @endpush
 
@@ -389,13 +477,43 @@ $(document).ready(function() {
     function initMaps() {
         // MAIN MAP
         mainMap = L.map('main-map', { zoomControl: false }).setView([-6.89, 112.06], 11);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(mainMap);
+
+        // Free tile layers (No API key required)
+        const osmMain = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+        });
+
+        const esriCanvasMain = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 16,
+            attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
+        });
+
+        const esriSatelliteMain = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS'
+        });
+
+        // Set OpenStreetMap as active basemap
+        osmMain.addTo(mainMap);
+
+        // Layer switcher for easy switching between Standard, Minimal Light, and Satellite
+        const baseMaps = {
+            "Peta Standar (OSM)": osmMain,
+            "Peta Terang (Esri Canvas)": esriCanvasMain,
+            "Citra Satelit": esriSatelliteMain
+        };
+        L.control.layers(baseMaps, null, { position: 'topright' }).addTo(mainMap);
         L.control.zoom({ position: 'bottomright' }).addTo(mainMap);
         markersLayer = L.layerGroup().addTo(mainMap);
 
         // FORM MAP
         formMap = L.map('form-map', { zoomControl: false }).setView([-6.89, 112.06], 11);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(formMap);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+        }).addTo(formMap);
+        L.control.zoom({ position: 'bottomright' }).addTo(formMap);
         
         // Enable Click to select location
         formMap.on('click', function(e) {
@@ -462,8 +580,10 @@ $(document).ready(function() {
 
     function resetFormState() {
         $('#in-id').val('');
+        $('#in-kategori').val('Survei');
         $('#in-status').val('Active');
         $('#form-unified')[0].reset();
+        $('#in-kategori').val('Survei');
         $('#in-tanggal').val(new Date().toISOString().split('T')[0]);
         $('#form-loc-card').addClass('d-none');
         $('#btn-submit-report').html('<i class="fas fa-save me-2"></i> SIMPAN LAPORAN KE PETA');
@@ -475,6 +595,7 @@ $(document).ready(function() {
 
     function openEditForm(item) {
         $('#in-id').val(item.id);
+        $('#in-kategori').val(item.kategori || 'Survei');
         $('#in-judul').val(item.judul);
         $('#in-tanggal').val(item.tanggal ? item.tanggal.split('T')[0] : new Date().toISOString().split('T')[0]);
         $('#in-kec').val(item.kecamatan);
@@ -690,6 +811,28 @@ $(document).ready(function() {
         }
     });
 
+    // Helper for Marker Icon by Category (Survei vs Sensus)
+    function getMarkerIcon(kategori) {
+        const isSensus = (kategori === 'Sensus');
+        const typeClass = isSensus ? 'sensus' : 'survei';
+        const iconClass = isSensus ? 'fa-users' : 'fa-clipboard-check';
+
+        return L.divIcon({
+            className: 'custom-map-pin',
+            html: `
+                <div class="pin-wrapper">
+                    <div class="pin-marker ${typeClass}">
+                        <i class="fas ${iconClass}"></i>
+                    </div>
+                    <div class="pin-shadow"></div>
+                </div>
+            `,
+            iconSize: [32, 38],
+            iconAnchor: [16, 38],
+            popupAnchor: [0, -36]
+        });
+    }
+
     // 3. CORE DATA FUNCTIONS
     function refreshAllData() {
         // Markers
@@ -698,7 +841,27 @@ $(document).ready(function() {
             $('#stat-total-points').text(res.length);
             const dist = {};
             res.forEach(loc => {
-                const m = L.marker([loc.lat, loc.lng]).addTo(markersLayer);
+                const icon = getMarkerIcon(loc.kategori);
+                const m = L.marker([loc.lat, loc.lng], { icon: icon }).addTo(markersLayer);
+                
+                const isSensus = (loc.kategori === 'Sensus');
+                const badgeStyle = isSensus ? 'background-color: #ea580c; color: white;' : 'background-color: #0058a8; color: white;';
+                const katIcon = isSensus ? 'fa-users' : 'fa-clipboard-check';
+                const katLabel = isSensus ? 'Sensus' : 'Survei';
+
+                m.bindPopup(`
+                    <div style="font-family: inherit; min-width: 175px;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge rounded-pill px-2 py-1" style="${badgeStyle}">
+                                <i class="fas ${katIcon} me-1"></i> ${katLabel}
+                            </span>
+                            <small class="text-muted fw-bold">${loc.kecamatan || ''}</small>
+                        </div>
+                        <div class="fw-bold text-dark mt-2" style="font-size: 0.9rem;">${loc.judul}</div>
+                        <small class="text-muted d-block mt-1"><i class="fas fa-user-edit me-1 text-primary"></i>${loc.pic}</small>
+                    </div>
+                `);
+
                 m.on('click', () => showMarkerDetail(loc));
                 const k = loc.kecamatan || 'Unknown';
                 dist[k] = (dist[k] || 0) + 1;
@@ -726,9 +889,15 @@ $(document).ready(function() {
         $.get('{{ route("tematik.api.laporan") }}', function(res) {
             let html = '';
             res.forEach(r => {
+                const isSensus = (r.kategori === 'Sensus');
+                const badgeKategori = isSensus
+                    ? `<span class="badge rounded-pill px-2 py-1 text-white shadow-sm" style="background-color: #ea580c; font-size: 0.72rem;"><i class="fas fa-users me-1"></i> Sensus</span>`
+                    : `<span class="badge rounded-pill px-2 py-1 text-white shadow-sm" style="background-color: #0058a8; font-size: 0.72rem;"><i class="fas fa-clipboard-check me-1"></i> Survei</span>`;
+
                 html += `
                     <tr>
                         <td class="ps-4 small fw-bold">${new Date(r.tanggal).toLocaleDateString('id-ID')}</td>
+                        <td>${badgeKategori}</td>
                         <td>
                             <span class="badge bg-light text-primary border rounded-pill small d-block mb-1">${r.kecamatan}</span>
                             <small class="text-muted d-block" style="font-size: 0.7rem;">${r.desa || '-'}</small>
@@ -747,7 +916,7 @@ $(document).ready(function() {
                     </tr>
                 `;
             });
-            $('#laporan-table-body').html(html || '<tr><td colspan="7" class="text-center py-5 text-muted">Data laporan masih kosong</td></tr>');
+            $('#laporan-table-body').html(html || '<tr><td colspan="8" class="text-center py-5 text-muted">Data laporan masih kosong</td></tr>');
         });
     }
 
@@ -761,6 +930,17 @@ $(document).ready(function() {
         $('#txt-sls').text(loc.sls || '-');
         $('#txt-pic').text(loc.pic);
         $('#txt-status-val').text(loc.status);
+        
+        const isSensus = (loc.kategori === 'Sensus');
+        const katLabel = isSensus ? 'Sensus' : 'Survei';
+        const katBg = isSensus ? '#ea580c' : '#0058a8';
+        const katIcon = isSensus ? 'fa-users' : 'fa-clipboard-check';
+        
+        $('#badge-kategori')
+            .html(`<i class="fas ${katIcon} me-1"></i> ${katLabel}`)
+            .attr('style', `background-color: ${katBg} !important; color: white !important; font-size: 0.72rem;`);
+        $('#txt-kategori').html(`<span class="badge text-white px-2 py-1 rounded-pill" style="background-color: ${katBg};"><i class="fas ${katIcon} me-1"></i> ${katLabel}</span>`);
+
         $('#badge-status').text(loc.status).attr('class', 'badge rounded-pill ' + (loc.status === 'Active' ? 'bg-success' : 'bg-warning'));
         $('#txt-members').html(loc.member ? loc.member.split(',').join('<br>') : 'Tidak ada catatan anggota.');
         mainMap.flyTo([loc.lat, loc.lng], 17);
@@ -801,6 +981,7 @@ $(document).ready(function() {
         const payload = {
             nama: $('#in-judul').val(),
             judul: $('#in-judul').val(),
+            kategori: $('#in-kategori').val() || 'Survei',
             kecamatan: $('#in-kec').val(),
             desa: $('#in-desa').val(),
             sls: $('#in-sls').val(),
@@ -1011,6 +1192,16 @@ $(document).ready(function() {
         }
     });
 
+    // Invalidate map size on tab switch to avoid grey tiles
+    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+        const target = $(e.target).attr('data-bs-target');
+        if (target === '#panel-sig' && mainMap) {
+            setTimeout(() => mainMap.invalidateSize(), 150);
+        } else if (target === '#panel-form' && formMap) {
+            setTimeout(() => formMap.invalidateSize(), 150);
+        }
+    });
+
     $('#deleteModal').appendTo('body');
     deleteModalInstance = new bootstrap.Modal(document.getElementById('deleteModal'));
     initMaps();
@@ -1018,4 +1209,3 @@ $(document).ready(function() {
 });
 </script>
 @endpush
-@endsection

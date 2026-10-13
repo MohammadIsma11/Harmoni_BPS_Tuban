@@ -21,7 +21,7 @@ body {
 
 @keyframes fadeInPage {
     from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    to { opacity: 1; transform: none; }
 }
 
 /* --- PROGRESS BAR --- */
@@ -298,4 +298,25 @@ body.sidebar-collapsed .nav-link i:first-child {
     .main-content { margin-left: 0; }
     .top-navbar { padding: 0 15px; }
 }
+
+/* --- UNIVERSAL MODAL & BACKDROP PROTECTION --- */
+.modal-backdrop {
+    z-index: 1055 !important;
+}
+
+.modal {
+    z-index: 1060 !important;
+}
+
+/* Ensure SweetAlert is always elevated above any modal */
+.swal2-container {
+    z-index: 2000 !important;
+}
+
+/* Safeguard: If no modal is currently open, never let a backdrop freeze clicks */
+body:not(.modal-open) .modal-backdrop {
+    display: none !important;
+    pointer-events: none !important;
+}
+
 
